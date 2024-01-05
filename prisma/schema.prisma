@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  email             String              @unique
+  password          String
+  Studios           Studios[]
+  UserStudioLinks   UserStudioLinks[]
+  GameReviews       GameReviews[]
+  GameReviewReplies GameReviewReplies[]
+  GamePurchases     GamePurchases[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model Games {
+  id                  Int                   @id @default(autoincrement())
+  title               String
+  studio              Studios               @relation(fields: [studioId], references: [id])
+  studioId            Int
+  basePrice           Int
+  GameCategories      GameCategories?       @relation(fields: [gameCategoriesId], references: [id])
+  gameCategoriesId    Int?
+  version             GameVersions[]
+  GameCategoryLinks   GameCategoryLinks[]
+  GameCollectionLinks GameCollectionLinks[]
+  GameSales           GameSales[]
+  GameReviews         GameReviews[]
+  GamePurchases       GamePurchases[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+}
+
+model Studios {
+  id              Int               @id @default(autoincrement())
+  name            String
+  manager         Users             @relation(fields: [managerId], references: [id])
+  managerId       Int
+  Games           Games[]
+  UserStudioLinks UserStudioLinks[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model UserStudioLinks {
+  id        Int      @id @default(autoincrement())
+  user      Users    @relation(fields: [userId], references: [id])
+  userId    Int
+  studio    Studios  @relation(fields: [studioId], references: [id])
+  studioId  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GameVersions {
+  id        Int      @id @default(autoincrement())
+  version   String
+  Games     Games?   @relation(fields: [gamesId], references: [id])
+  gamesId   Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GameSales {
+  id        Int      @id @default(autoincrement())
+  game      Games    @relation(fields: [gameId], references: [id])
+  gameId    Int
+  percent   Int
+  startAt   DateTime
+  endAt     DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GameReviews {
+  id                Int                 @id @default(autoincrement())
+  game              Games               @relation(fields: [gameId], references: [id])
+  gameId            Int
+  user              Users               @relation(fields: [userId], references: [id])
+  userId            Int
+  content           String
+  GameReviewReplies GameReviewReplies[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model GameReviewReplies {
+  id        Int         @id @default(autoincrement())
+  review    GameReviews @relation(fields: [reviewId], references: [id])
+  reviewId  Int
+  user      Users       @relation(fields: [userId], references: [id])
+  userId    Int
+  content   String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model GamePurchases {
+  id            Int      @id @default(autoincrement())
+  user          Users    @relation(fields: [userId], references: [id])
+  userId        Int
+  game          Games    @relation(fields: [gameId], references: [id])
+  gameId        Int
+  purchasePrice Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model GameCategories {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  Games             Games[]
+  GameCategoryLinks GameCategoryLinks[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model GameCategoryLinks {
+  id         Int            @id @default(autoincrement())
+  game       Games          @relation(fields: [gameId], references: [id])
+  gameId     Int
+  category   GameCategories @relation(fields: [categoryId], references: [id])
+  categoryId Int
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+model GameCollections {
+  id                  Int                   @id @default(autoincrement())
+  title               String
+  description         String
+  startAt             DateTime
+  endAt               DateTime
+  GameCollectionLinks GameCollectionLinks[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+}
+
+model GameCollectionLinks {
+  id           Int             @id @default(autoincrement())
+  collection   GameCollections @relation(fields: [collectionId], references: [id])
+  collectionId Int
+  game         Games           @relation(fields: [gameId], references: [id])
+  gameId       Int
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model MainBanners {
+  id              Int      @id @default(autoincrement())
+  startAt         DateTime
+  endAt           DateTime
+  link            String
+  title           String?
+  iconImage       String?
+  backgroundImage String
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
