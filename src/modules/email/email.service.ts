@@ -16,15 +16,15 @@ export class EmailService {
     this.transporter = nodemailer.createTransport({
       service: 'Gmail',
       auth: {
-        user: 'qazxsw100415@gmail.com',
-        pass: '1111',
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
       },
     });
   }
 
   async sendVerifyEmail(email: string, verifyToken: string) {
-    const baseUrl = 'http://localhost:4000';
-    const url = `${baseUrl}/users/email-verify?verifyToken=${verifyToken}`;
+    const baseUrl = 'http://localhost:3000';
+    const url = `${baseUrl}/auth/verify?verifyToken=${verifyToken}`;
 
     const mailOptions: EmailOptions = {
       to: email,

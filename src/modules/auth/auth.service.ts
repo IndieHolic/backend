@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -6,11 +7,11 @@ import {
 import { LoginRequestDto } from './dto/login-request.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from 'src/config/database/prisma.service';
 import { Users } from '@prisma/client';
-import { RegisterRequestDto } from 'src/auth/dto/register-request.dto';
+import { RegisterRequestDto } from 'src/modules/auth/dto/register-request.dto';
 import * as uuid from 'uuid';
-import { EmailService } from 'src/email/email.service';
+import { EmailService } from 'src/modules/email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -102,6 +103,10 @@ export class AuthService {
 
     if (emailVerification.expiredAt < new Date()) {
       throw new UnauthorizedException('인증 토큰이 만료되었습니다.');
+    }
+
+    if (emailVerification.isVerified) {
+      throw new BadRequestException('이미 인증되었습니다.');
     }
 
     await this.prismaService.emailVerifications.update({

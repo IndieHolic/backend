@@ -1,9 +1,9 @@
 import { Body, Controller, Post, Query } from '@nestjs/common';
-import { AuthService } from 'src/auth/auth.service';
-import { LoginRequestDto } from 'src/auth/dto/login-request.dto';
-import { LoginResponseDto } from 'src/auth/dto/login-response.dto';
-import { RegisterRequestDto } from 'src/auth/dto/register-request.dto';
-import { SendEmailResponseDto } from 'src/auth/dto/send-email-response';
+import { AuthService } from 'src/modules/auth/auth.service';
+import { LoginRequestDto } from 'src/modules/auth/dto/login-request.dto';
+import { LoginResponseDto } from 'src/modules/auth/dto/login-response.dto';
+import { RegisterRequestDto } from 'src/modules/auth/dto/register-request.dto';
+import { SendEmailResponseDto } from 'src/modules/auth/dto/send-email-response';
 
 @Controller('auth')
 export class AuthController {
@@ -22,12 +22,11 @@ export class AuthController {
   @Post('/register')
   async register(@Body() registerRequestDto: RegisterRequestDto) {
     await this.authService.createUser(registerRequestDto);
-    return {};
   }
 
   @Post('/verify')
   async verifyEmail(@Query('verifyToken') verifyToken: string) {
-    return await this.authService.verifyEmail(verifyToken);
+    await this.authService.verifyEmail(verifyToken);
   }
 
   @Post('/send-verify')

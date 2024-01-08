@@ -3,7 +3,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { Payload } from './jwt.payload';
 import { Users } from '@prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from 'src/config/database/prisma.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -22,7 +22,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       },
     });
     if (!user) {
-      throw new UnauthorizedException('허용되지않은 user입니다');
+      throw new UnauthorizedException('Invalid token');
     }
 
     return user;
