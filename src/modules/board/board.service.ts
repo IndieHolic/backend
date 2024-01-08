@@ -8,6 +8,7 @@ import { PrismaService } from 'src/config/database/prisma.service';
 import { BoardCreateDto } from './dto/create-board.dto';
 import { defaultThumbnailUrl } from 'src/common/constants/url.constants';
 import { BoardType, LikeStatus } from '@prisma/client';
+import { UpdateBoardDto } from './dto/update-board.dto';
 
 @Injectable()
 export class BoardService {
@@ -213,5 +214,22 @@ export class InfoBoardService {
     });
 
     return newBoard;
+  }
+
+  async update(boardId: number, userId: number, board: UpdateBoardDto) {
+    const targetBoard = await this.prismaService.boards.findFirst({
+      where: { id: boardId, writerId: userId, boardType: BoardType.Info },
+    });
+    if (targetBoard) {
+      throw new NotFoundException();
+    }
+
+    return await this.prismaService.boards.update({
+      where: { id: targetBoard.id },
+      data: {
+        title: board.title ? targetBoard.title : board.title,
+        content: board.content ? targetBoard.content : board.content,
+      },
+    });
   }
 }

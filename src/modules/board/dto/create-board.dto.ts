@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class BoardCreateDto {
+export class CreateBoardDto {
   @IsNotEmpty()
   @IsString()
   title: string;
@@ -13,7 +13,7 @@ export class BoardCreateDto {
   thumbnailUrl: string;
 }
 
-export class freeBoardCreateDto extends BoardCreateDto {
+export class CreateFreeBoardDto extends CreateBoardDto {
   @IsNumber()
   parentId: number;
 }
