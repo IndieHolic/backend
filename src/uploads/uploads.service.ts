@@ -1,7 +1,6 @@
 import * as path from 'path';
 import { Injectable } from '@nestjs/common';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import * as mimeTypes from 'mime-types';
 
 @Injectable()
 export class UploadsService {
