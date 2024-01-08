@@ -7,19 +7,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum LikeStatus {
+  Like
+  Dislike
+}
+
+enum BoardType {
+  Info
+  free
+  QnA
+}
+
 model Users {
   id                Int                 @id @default(autoincrement())
   name              String
   email             String              @unique
   password          String
   isAdmin           Boolean             @default(false)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
   Studios           Studios[]
   UserStudioLinks   UserStudioLinks[]
   GameReviews       GameReviews[]
   GameReviewReplies GameReviewReplies[]
   GamePurchases     GamePurchases[]
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  Boards            Boards[]
+  BoardLikes        BoardLikes[]
+  BoardComments     BoardComments[]
 }
 
 model EmailVerifications {
@@ -40,14 +55,17 @@ model Games {
   basePrice           Int
   GameCategories      GameCategories?       @relation(fields: [gameCategoriesId], references: [id])
   gameCategoriesId    Int?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
   version             GameVersions[]
   GameCategoryLinks   GameCategoryLinks[]
   GameCollectionLinks GameCollectionLinks[]
   GameSales           GameSales[]
   GameReviews         GameReviews[]
   GamePurchases       GamePurchases[]
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
+
+  @@map("games")
 }
 
 model Studios {
@@ -174,6 +192,50 @@ model MainBanners {
   iconImage       String?
   backgroundImage String
   description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Boards {
+  id              Int      @id @default(autoincrement())
+  writer          Users    @relation(fields: [writerId], references: [id])
+  writerId        Int
+  title           String
+  content         String
+  thumbnailUrl  String
+  likeCount       Int
+  dislikeCount    Int
+  boardType       BoardType
+  parent          Boards?  @relation("children", fields: [parentId], references: [id])
+  parentId        Int?     
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+
+  children        Boards[] @relation("children")
+  BoardLikes      BoardLikes[]
+  BoardComments   BoardComments[]
+}
+
+model BoardComments {
+  id              Int      @id @default(autoincrement())
+  writer          Users    @relation(fields: [writerId], references: [id])
+  writerId        Int
+  content         String
+  board           Boards    @relation(fields: [boardId], references: [id])
+  boardId         Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+}
+
+model BoardLikes {
+  id              Int      @id @default(autoincrement())
+  user            Users    @relation(fields: [userId], references: [id])
+  userId          Int
+  board           Boards?    @relation(fields: [boardId], references: [id])
+  status          LikeStatus
+  boardId         Int?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
