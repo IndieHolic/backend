@@ -41,21 +41,26 @@ export class BoardService {
       where: { boardId, userId },
     });
     if (existLike) {
-      if (existLike.status === LikeStatus.Like) {
-        return existLike;
-      } else {
+      if (existLike.status === LikeStatus.Dislike) {
         throw new ConflictException();
+      } else if (existLike.status === LikeStatus.Like) {
+        return existLike;
       }
     }
 
     const result = await this.prismaService.$transaction([
-      this.prismaService.boardLikes.create({
-        data: {
-          userId,
-          boardId,
-          status: LikeStatus.Like,
-        },
-      }),
+      existLike
+        ? this.prismaService.boardLikes.update({
+            where: { id: existLike.id },
+            data: { status: LikeStatus.Like },
+          })
+        : this.prismaService.boardLikes.create({
+            data: {
+              userId,
+              boardId,
+              status: LikeStatus.Like,
+            },
+          }),
       this.prismaService.boards.update({
         where: {
           id: targetBoard.id,
@@ -86,21 +91,26 @@ export class BoardService {
       where: { boardId, userId },
     });
     if (existDislike) {
-      if (existDislike.status === LikeStatus.Dislike) {
-        return existDislike;
-      } else {
+      if (existDislike.status === LikeStatus.Like) {
         throw new ConflictException();
+      } else if (existDislike.status === LikeStatus.Dislike) {
+        return existDislike;
       }
     }
 
     const result = await this.prismaService.$transaction([
-      this.prismaService.boardLikes.create({
-        data: {
-          userId,
-          boardId,
-          status: LikeStatus.Dislike,
-        },
-      }),
+      existDislike
+        ? this.prismaService.boardLikes.update({
+            where: { id: existDislike.id },
+            data: { status: LikeStatus.Dislike },
+          })
+        : this.prismaService.boardLikes.create({
+            data: {
+              userId,
+              boardId,
+              status: LikeStatus.Dislike,
+            },
+          }),
       this.prismaService.boards.update({
         where: {
           id: targetBoard.id,
@@ -108,6 +118,74 @@ export class BoardService {
         data: {
           dislikeCount: targetBoard.dislikeCount + 1,
         },
+      }),
+    ]);
+
+    return result[0];
+  }
+
+  async deleteLike(userId: number, boardId: number) {
+    const targetBoard = await this.prismaService.boards.findFirst({
+      where: { id: boardId },
+      select: {
+        id: true,
+        likeCount: true,
+        BoardLikes: true,
+      },
+    });
+    if (!targetBoard) {
+      throw new NotFoundException();
+    }
+
+    const existLike = await this.prismaService.boardLikes.findFirst({
+      where: { boardId, userId, status: LikeStatus.Like },
+    });
+    if (!existLike) {
+      throw new NotFoundException();
+    }
+
+    const result = await this.prismaService.$transaction([
+      this.prismaService.boardLikes.update({
+        where: { id: existLike.id },
+        data: { status: LikeStatus.None },
+      }),
+      this.prismaService.boards.update({
+        where: { id: targetBoard.id },
+        data: { likeCount: targetBoard.likeCount - 1 },
+      }),
+    ]);
+
+    return result[0];
+  }
+
+  async deleteDislike(userId: number, boardId: number) {
+    const targetBoard = await this.prismaService.boards.findFirst({
+      where: { id: boardId },
+      select: {
+        id: true,
+        dislikeCount: true,
+        BoardLikes: true,
+      },
+    });
+    if (!targetBoard) {
+      throw new NotFoundException();
+    }
+
+    const existDislike = await this.prismaService.boardLikes.findFirst({
+      where: { boardId, userId, status: LikeStatus.Like },
+    });
+    if (!existDislike) {
+      throw new NotFoundException();
+    }
+
+    const result = await this.prismaService.$transaction([
+      this.prismaService.boardLikes.update({
+        where: { id: existDislike.id },
+        data: { status: LikeStatus.None },
+      }),
+      this.prismaService.boards.update({
+        where: { id: targetBoard.id },
+        data: { likeCount: targetBoard.dislikeCount - 1 },
       }),
     ]);
 

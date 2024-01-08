@@ -46,14 +46,18 @@ export class BoardController {
   deleteLike(
     @CurrentUser() user: Users,
     @Param('boardId', ParseIntPipe) boardId: number,
-  ) {}
+  ) {
+    return this.boardService.deleteLike(user.id, boardId);
+  }
 
   @Delete('/dislike/:boardId')
   @UseGuards(JwtGuard)
   deleteDislike(
     @CurrentUser() user: Users,
     @Param('boardId', ParseIntPipe) boardId: number,
-  ) {}
+  ) {
+    return this.boardService.deleteDislike(user.id, boardId);
+  }
 }
 
 @Controller('board/info')
