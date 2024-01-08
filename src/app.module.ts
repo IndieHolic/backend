@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from './prisma/prisma.module';
-import { UploadsModule } from './uploads/uploads.module';
+import { PrismaModule } from 'src/config/database/prisma.module';
+import { UploadsModule } from './modules/upload/upload.module';
 import { ConfigModule } from '@nestjs/config';
 import { MulterModule } from '@nestjs/platform-express';
+import { AuthModule } from 'src/modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { MulterModule } from '@nestjs/platform-express';
       envFilePath: ['.env'],
     }),
     PrismaModule,
+    AuthModule,
     MulterModule.register({
       dest: './uploads',
     }),

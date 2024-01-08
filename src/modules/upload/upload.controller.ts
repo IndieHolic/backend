@@ -5,7 +5,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UploadsService } from './uploads.service';
+import { UploadsService } from './upload.service';
 
 @Controller('uploads')
 export class UploadsController {
