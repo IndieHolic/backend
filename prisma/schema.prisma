@@ -197,23 +197,23 @@ model MainBanners {
 }
 
 model Boards {
-  id              Int      @id @default(autoincrement())
-  writer          Users    @relation(fields: [writerId], references: [id])
+  id              Int       @id @default(autoincrement())
+  writer          Users     @relation(fields: [writerId], references: [id])
   writerId        Int
   title           String
   content         String
   thumbnailUrl  String
-  likeCount       Int
-  dislikeCount    Int
+  likeCount       Int       @default(0)
+    dislikeCount    Int     @default(0)
   boardType       BoardType
-  parent          Boards?  @relation("children", fields: [parentId], references: [id])
+  parent          Boards?   @relation("children", fields: [parentId], references: [id])
   parentId        Int?     
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
 
-  children        Boards[] @relation("children")
-  BoardLikes      BoardLikes[]
+  Children        Boards[]  @relation("children")
+  boardLikes      BoardLikes[]
   BoardComments   BoardComments[]
 }
 

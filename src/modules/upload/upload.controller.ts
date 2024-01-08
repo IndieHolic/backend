@@ -5,11 +5,11 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UploadsService } from './upload.service';
+import { UploadService } from './upload.service';
 
-@Controller('uploads')
-export class UploadsController {
-  constructor(private readonly uploadsService: UploadsService) {}
+@Controller('upload')
+export class UploadController {
+  constructor(private readonly uploadsService: UploadService) {}
 
   @Post('')
   @UseInterceptors(FileInterceptor('file'))
