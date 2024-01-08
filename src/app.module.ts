@@ -4,6 +4,7 @@ import { UploadsModule } from './modules/upload/upload.module';
 import { ConfigModule } from '@nestjs/config';
 import { MulterModule } from '@nestjs/platform-express';
 import { AuthModule } from 'src/modules/auth/auth.module';
+import { UserModule } from 'src/modules/user/user.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { AuthModule } from 'src/modules/auth/auth.module';
     }),
     PrismaModule,
     AuthModule,
+    UserModule,
     MulterModule.register({
       dest: './uploads',
     }),
