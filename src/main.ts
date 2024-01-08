@@ -6,6 +6,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const prismaService: PrismaService = app.get(PrismaService);
   prismaService.enableShutdownHook(app);
+
   await app.listen(3000);
 }
 bootstrap();
