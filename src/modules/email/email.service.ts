@@ -23,7 +23,7 @@ export class EmailService {
   }
 
   async sendVerifyEmail(email: string, verifyToken: string) {
-    const baseUrl = 'http://localhost:3000';
+    const baseUrl = 'http://localhost:4000';
     const url = `${baseUrl}/auth/verify?verifyToken=${verifyToken}`;
 
     const mailOptions: EmailOptions = {
