@@ -3,51 +3,60 @@ import {
   Controller,
   Delete,
   Param,
+  ParseIntPipe,
   Post,
-  Query,
   UseGuards,
-} from "@nestjs/common";
-import { BoardService, InfoBoardService } from "./board.service";
-import { JwtGuard } from "../auth/guards/jwt.guard";
-import { CurrentUser } from "src/common/decorators/current-user.decorator";
-import { Users } from "@prisma/client";
-import { BoardCreateDto } from "./dto/create-board.dto";
+} from '@nestjs/common';
+import { BoardService, InfoBoardService } from './board.service';
+import { JwtGuard } from '../auth/guards/jwt.guard';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { Users } from '@prisma/client';
+import { BoardCreateDto } from './dto/create-board.dto';
 
-@Controller("board")
+@Controller('board')
 export class BoardController {
   constructor(private readonly boardService: BoardService) {}
 
-  @Delete("/:boardId")
+  @Delete('/:boardId')
   @UseGuards(JwtGuard)
-  delete(@CurrentUser() user: Users, @Param("boardId") boardId: number) {
+  delete(@CurrentUser() user: Users, @Param('boardId') boardId: number) {
     return this.boardService.delete(user.id, boardId);
   }
 
-  @Post("/like/:boardId")
+  @Post('/like/:boardId')
   @UseGuards(JwtGuard)
-  createLike(@CurrentUser() user: Users, @Param("boardId") boardId: number) {
+  createLike(
+    @CurrentUser() user: Users,
+    @Param('boardId', ParseIntPipe) boardId: number,
+  ) {
     return this.boardService.createLike(user.id, boardId);
   }
 
-  @Post("/dislike/:boardId")
+  @Post('/dislike/:boardId')
   @UseGuards(JwtGuard)
-  createDislike(@CurrentUser() user: Users, @Param("boardId") boardId: number) {
-    return;
+  createDislike(
+    @CurrentUser() user: Users,
+    @Param('boardId', ParseIntPipe) boardId: number,
+  ) {
+    return this.boardService.createDislike(user.id, boardId);
   }
 
-  @Delete("/like/:boardId")
+  @Delete('/like/:boardId')
   @UseGuards(JwtGuard)
-  deleteLike(@CurrentUser() user: Users, @Param("boardId") boardId: number) {}
+  deleteLike(
+    @CurrentUser() user: Users,
+    @Param('boardId', ParseIntPipe) boardId: number,
+  ) {}
 
-  @Delete("/dislike/:boardId")
+  @Delete('/dislike/:boardId')
   @UseGuards(JwtGuard)
   deleteDislike(
     @CurrentUser() user: Users,
-    @Param("boardId") boardId: number,
+    @Param('boardId', ParseIntPipe) boardId: number,
   ) {}
 }
 
-@Controller("board/info")
+@Controller('board/info')
 export class InfoBoardController {
   constructor(private readonly infoBoardService: InfoBoardService) {}
 

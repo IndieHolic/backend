@@ -213,7 +213,7 @@ model Boards {
   deletedAt       DateTime?
 
   Children        Boards[]  @relation("children")
-  boardLikes      BoardLikes[]
+  BoardLikes      BoardLikes[]
   BoardComments   BoardComments[]
 }
 
@@ -234,8 +234,8 @@ model BoardLikes {
   user            Users    @relation(fields: [userId], references: [id])
   userId          Int
   board           Boards?    @relation(fields: [boardId], references: [id])
-  status          LikeStatus
   boardId         Int?
+  status          LikeStatus
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

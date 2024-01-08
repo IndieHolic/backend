@@ -1,11 +1,13 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from "@nestjs/common";
-import { PrismaService } from "src/config/database/prisma.service";
-import { BoardCreateDto } from "./dto/create-board.dto";
-import { defaultThumbnailUrl } from "src/common/constants/url.constants";
+} from '@nestjs/common';
+import { PrismaService } from 'src/config/database/prisma.service';
+import { BoardCreateDto } from './dto/create-board.dto';
+import { defaultThumbnailUrl } from 'src/common/constants/url.constants';
+import { BoardType, LikeStatus } from '@prisma/client';
 
 @Injectable()
 export class BoardService {
@@ -23,18 +25,93 @@ export class BoardService {
   }
 
   async createLike(userId: number, boardId: number) {
-    const targetBoard = this.prismaService.boards.findFirst({
+    const targetBoard = await this.prismaService.boards.findFirst({
       where: { id: boardId },
       select: {
         id: true,
         likeCount: true,
+        BoardLikes: true,
+      },
+    });
+    if (!targetBoard) {
+      throw new NotFoundException();
+    }
+
+    const existLike = await this.prismaService.boardLikes.findFirst({
+      where: { boardId, userId },
+    });
+    if (existLike) {
+      if (existLike.status === LikeStatus.Like) {
+        return existLike;
+      } else {
+        throw new ConflictException();
+      }
+    }
+
+    const result = await this.prismaService.$transaction([
+      this.prismaService.boardLikes.create({
+        data: {
+          userId,
+          boardId,
+          status: LikeStatus.Like,
+        },
+      }),
+      this.prismaService.boards.update({
+        where: {
+          id: targetBoard.id,
+        },
+        data: {
+          likeCount: targetBoard.likeCount + 1,
+        },
+      }),
+    ]);
+
+    return result[0];
+  }
+
+  async createDislike(userId: number, boardId: number) {
+    const targetBoard = await this.prismaService.boards.findFirst({
+      where: { id: boardId },
+      select: {
+        id: true,
         dislikeCount: true,
         BoardLikes: true,
       },
     });
-    if (targetBoard) {
+    if (!targetBoard) {
       throw new NotFoundException();
     }
+
+    const existDislike = await this.prismaService.boardLikes.findFirst({
+      where: { boardId, userId },
+    });
+    if (existDislike) {
+      if (existDislike.status === LikeStatus.Dislike) {
+        return existDislike;
+      } else {
+        throw new ConflictException();
+      }
+    }
+
+    const result = await this.prismaService.$transaction([
+      this.prismaService.boardLikes.create({
+        data: {
+          userId,
+          boardId,
+          status: LikeStatus.Dislike,
+        },
+      }),
+      this.prismaService.boards.update({
+        where: {
+          id: targetBoard.id,
+        },
+        data: {
+          dislikeCount: targetBoard.dislikeCount + 1,
+        },
+      }),
+    ]);
+
+    return result[0];
   }
 }
 
@@ -43,14 +120,17 @@ export class InfoBoardService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async create(writerId: number, board: BoardCreateDto) {
-    if (board.thumbnailUrl) {
+    if (!board.thumbnailUrl) {
       board.thumbnailUrl = defaultThumbnailUrl;
     }
 
     const newBoard = this.prismaService.boards.create({
       data: {
         writerId,
-        ...board,
+        title: board.title,
+        content: board.content,
+        thumbnailUrl: board.thumbnailUrl,
+        boardType: BoardType.Info,
       },
     });
 

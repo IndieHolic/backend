@@ -1,5 +1,4 @@
-import { BoardType } from '@prisma/client';
-import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class BoardCreateDto {
   @IsNotEmpty()
@@ -12,10 +11,6 @@ export class BoardCreateDto {
 
   @IsString()
   thumbnailUrl: string;
-
-  @IsNotEmpty()
-  @IsEnum(BoardType)
-  boardType: BoardType;
 }
 
 export class freeBoardCreateDto extends BoardCreateDto {
