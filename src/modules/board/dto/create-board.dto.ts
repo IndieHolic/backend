@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateBoardDto {
   @IsNotEmpty()
@@ -12,8 +12,8 @@ export class CreateBoardDto {
   @IsString()
   thumbnailUrl: string;
 
-  @IsArray()
-  tags: string[];
+  @IsString()
+  tags: string;
 }
 
 export class CreateFreeBoardDto extends CreateBoardDto {

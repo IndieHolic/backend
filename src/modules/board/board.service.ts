@@ -18,7 +18,7 @@ export class BoardService {
     const targetBoard = await this.prismaService.boards.findFirst({
       where: { id: boardId, writerId: userId },
     });
-    if (targetBoard) {
+    if (!targetBoard) {
       throw new ForbiddenException();
     }
 
@@ -226,6 +226,7 @@ export class InfoBoardService {
     if (!board.thumbnailUrl) {
       board.thumbnailUrl = defaultThumbnailUrl;
     }
+    console.log(board);
 
     const newBoard = this.prismaService.boards.create({
       data: {
@@ -234,6 +235,7 @@ export class InfoBoardService {
         content: board.content,
         thumbnailUrl: board.thumbnailUrl,
         boardType: BoardType.Info,
+        tags: board.tags,
       },
     });
 
@@ -258,6 +260,7 @@ export class FreeBoardService {
         thumbnailUrl: board.thumbnailUrl,
         boardType: BoardType.free,
         parentId: board.parentId,
+        tags: board.tags,
       },
     });
 

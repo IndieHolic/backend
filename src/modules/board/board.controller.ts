@@ -18,14 +18,18 @@ import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { Users } from '@prisma/client';
 import { CreateBoardDto, CreateFreeBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update-board.dto';
+import { TagParsePipe } from './pipes/tag-parse.pipe';
 
 @Controller('board')
 export class BoardController {
   constructor(private readonly boardService: BoardService) {}
 
-  @Delete('/:boardId')
+  @Delete(':boardId')
   @UseGuards(JwtGuard)
-  delete(@CurrentUser() user: Users, @Param('boardId') boardId: number) {
+  delete(
+    @CurrentUser() user: Users,
+    @Param('boardId', ParseIntPipe) boardId: number,
+  ) {
     return this.boardService.delete(user.id, boardId);
   }
 
@@ -82,7 +86,11 @@ export class InfoBoardController {
 
   @Post()
   @UseGuards(JwtGuard)
-  create(@CurrentUser() user: Users, @Body() createBoardDto: CreateBoardDto) {
+  create(
+    @CurrentUser() user: Users,
+    @Body(TagParsePipe) createBoardDto: CreateBoardDto,
+  ) {
+    console.log(createBoardDto);
     return this.infoBoardService.create(user.id, createBoardDto);
   }
 }
