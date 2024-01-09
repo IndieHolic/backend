@@ -203,9 +203,10 @@ model Boards {
   writerId        Int
   title           String
   content         String
-  thumbnailUrl  String
+  thumbnailUrl    String
+  tags            String    @default("")
   likeCount       Int       @default(0)
-    dislikeCount    Int     @default(0)
+  dislikeCount    Int       @default(0)
   boardType       BoardType
   parent          Boards?   @relation("children", fields: [parentId], references: [id])
   parentId        Int?     

@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/config/database/prisma.service';
-import { BoardCreateDto } from './dto/create-board.dto';
+import { CreateBoardDto, CreateFreeBoardDto } from './dto/create-board.dto';
 import { defaultThumbnailUrl } from 'src/common/constants/url.constants';
 import { BoardType, LikeStatus } from '@prisma/client';
 import { UpdateBoardDto } from './dto/update-board.dto';
@@ -15,14 +15,38 @@ export class BoardService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async delete(userId: number, boardId: number) {
-    const targetBoard = this.prismaService.boards.findFirst({
+    const targetBoard = await this.prismaService.boards.findFirst({
       where: { id: boardId, writerId: userId },
     });
     if (targetBoard) {
       throw new ForbiddenException();
     }
 
-    return this.prismaService.boards.delete({ where: { id: boardId } });
+    return await this.prismaService.boards.update({
+      where: { id: boardId },
+      data: {
+        updatedAt: targetBoard.updatedAt,
+        deletedAt: new Date(),
+      },
+    });
+  }
+
+  async update(boardId: number, userId: number, board: UpdateBoardDto) {
+    const targetBoard = await this.prismaService.boards.findFirst({
+      where: { id: boardId, writerId: userId, boardType: BoardType.Info },
+    });
+    if (targetBoard) {
+      throw new NotFoundException();
+    }
+
+    return await this.prismaService.boards.update({
+      where: { id: targetBoard.id },
+      data: {
+        title: board.title ? board.title : targetBoard.title,
+        content: board.content ? board.content : targetBoard.content,
+        tags: board.tags ? board.tags : targetBoard.tags,
+      },
+    });
   }
 
   async createLike(userId: number, boardId: number) {
@@ -198,7 +222,7 @@ export class BoardService {
 export class InfoBoardService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(writerId: number, board: BoardCreateDto) {
+  async create(writerId: number, board: CreateBoardDto) {
     if (!board.thumbnailUrl) {
       board.thumbnailUrl = defaultThumbnailUrl;
     }
@@ -215,21 +239,28 @@ export class InfoBoardService {
 
     return newBoard;
   }
+}
 
-  async update(boardId: number, userId: number, board: UpdateBoardDto) {
-    const targetBoard = await this.prismaService.boards.findFirst({
-      where: { id: boardId, writerId: userId, boardType: BoardType.Info },
-    });
-    if (targetBoard) {
-      throw new NotFoundException();
+@Injectable()
+export class FreeBoardService {
+  constructor(private readonly prismaService: PrismaService) {}
+
+  async create(writerId: number, board: CreateFreeBoardDto) {
+    if (!board.thumbnailUrl) {
+      board.thumbnailUrl = defaultThumbnailUrl;
     }
 
-    return await this.prismaService.boards.update({
-      where: { id: targetBoard.id },
+    const newBoard = this.prismaService.boards.create({
       data: {
-        title: board.title ? targetBoard.title : board.title,
-        content: board.content ? targetBoard.content : board.content,
+        writerId,
+        title: board.title,
+        content: board.content,
+        thumbnailUrl: board.thumbnailUrl,
+        boardType: BoardType.free,
+        parentId: board.parentId,
       },
     });
+
+    return newBoard;
   }
 }

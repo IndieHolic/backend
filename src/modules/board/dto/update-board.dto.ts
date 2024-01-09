@@ -7,4 +7,7 @@ export class UpdateBoardDto implements Partial<Boards> {
 
   @IsString()
   content?: string;
+
+  @IsString()
+  tags?: string;
 }

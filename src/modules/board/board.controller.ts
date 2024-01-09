@@ -8,11 +8,15 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { BoardService, InfoBoardService } from './board.service';
+import {
+  BoardService,
+  FreeBoardService,
+  InfoBoardService,
+} from './board.service';
 import { JwtGuard } from '../auth/guards/jwt.guard';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { Users } from '@prisma/client';
-import { BoardCreateDto } from './dto/create-board.dto';
+import { CreateBoardDto, CreateFreeBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update-board.dto';
 
 @Controller('board')
@@ -23,6 +27,16 @@ export class BoardController {
   @UseGuards(JwtGuard)
   delete(@CurrentUser() user: Users, @Param('boardId') boardId: number) {
     return this.boardService.delete(user.id, boardId);
+  }
+
+  @Patch(':boardId')
+  @UseGuards(JwtGuard)
+  update(
+    @CurrentUser() user: Users,
+    @Param('boardId', ParseIntPipe) boardId: number,
+    @Body() updateBoardDto: UpdateBoardDto,
+  ) {
+    return this.boardService.update(user.id, boardId, updateBoardDto);
   }
 
   @Post('/like/:boardId')
@@ -68,17 +82,21 @@ export class InfoBoardController {
 
   @Post()
   @UseGuards(JwtGuard)
-  create(@CurrentUser() user: Users, @Body() createBoardDto: BoardCreateDto) {
+  create(@CurrentUser() user: Users, @Body() createBoardDto: CreateBoardDto) {
     return this.infoBoardService.create(user.id, createBoardDto);
   }
+}
 
-  @Patch(':boardId')
+@Controller('board/free')
+export class FreeBoardController {
+  constructor(private readonly freeboardService: FreeBoardService) {}
+
+  @Post()
   @UseGuards(JwtGuard)
-  update(
+  create(
     @CurrentUser() user: Users,
-    @Param('boardId') boardId: number,
-    @Body() updateBoardDto: UpdateBoardDto,
+    @Body() createFreeBoardDto: CreateFreeBoardDto,
   ) {
-    return this.infoBoardService.update(user.id, boardId, updateBoardDto);
+    return this.freeboardService.create(user.id, createFreeBoardDto);
   }
 }
