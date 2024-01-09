@@ -51,14 +51,25 @@ model Games {
 }
 
 model Studios {
-  id              Int               @id @default(autoincrement())
-  name            String
-  manager         Users             @relation(fields: [managerId], references: [id])
-  managerId       Int
-  Games           Games[]
-  UserStudioLinks UserStudioLinks[]
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id                Int                 @id @default(autoincrement())
+  name              String
+  manager           Users               @relation(fields: [managerId], references: [id])
+  managerId         Int
+  Games             Games[]
+  UserStudioLinks   UserStudioLinks[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  StudioInvitations StudioInvitations[]
+}
+
+model StudioInvitations {
+  id        Int      @id @default(autoincrement())
+  studio    Studios  @relation(fields: [studioId], references: [id])
+  studioId  Int
+  email     String
+  expiredAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model UserStudioLinks {
