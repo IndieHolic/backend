@@ -36,6 +36,7 @@ model Users {
   Boards            Boards[]
   BoardLikes        BoardLikes[]
   BoardComments     BoardComments[]
+  BoardViewHistory  BoardViewHistory[]
 }
 
 model EmailVerifications {
@@ -198,25 +199,27 @@ model MainBanners {
 }
 
 model Boards {
-  id              Int       @id @default(autoincrement())
-  writer          Users     @relation(fields: [writerId], references: [id])
-  writerId        Int
-  title           String
-  content         String
-  thumbnailUrl    String
-  tags            String    @default("")
-  likeCount       Int       @default(0)
-  dislikeCount    Int       @default(0)
-  boardType       BoardType
-  parent          Boards?   @relation("children", fields: [parentId], references: [id])
-  parentId        Int?     
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  deletedAt       DateTime?
+  id                Int       @id @default(autoincrement())
+  writer            Users     @relation(fields: [writerId], references: [id])
+  writerId          Int
+  title             String
+  content           String
+  thumbnailUrl      String
+  tags              String    @default("")
+  likeCount         Int       @default(0)
+  dislikeCount      Int       @default(0)
+  viewCount         Int       @default(0)
+  boardType         BoardType
+  parent            Boards?   @relation("children", fields: [parentId], references: [id])
+  parentId          Int?     
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
 
-  Children        Boards[]  @relation("children")
-  BoardLikes      BoardLikes[]
-  BoardComments   BoardComments[]
+  Children          Boards[]  @relation("children")
+  BoardLikes        BoardLikes[]
+  BoardComments     BoardComments[]
+  BoardViewHistory  BoardViewHistory[]
 }
 
 model BoardComments {
@@ -235,9 +238,17 @@ model BoardLikes {
   id              Int      @id @default(autoincrement())
   user            Users    @relation(fields: [userId], references: [id])
   userId          Int
-  board           Boards?    @relation(fields: [boardId], references: [id])
-  boardId         Int?
+  board           Boards    @relation(fields: [boardId], references: [id])
+  boardId         Int
   status          LikeStatus
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model BoardViewHistory {
+  id              Int      @id @default(autoincrement())
+  board           Boards?    @relation(fields: [boardId], references: [id])
+  boardId         Int?
+  user            Users    @relation(fields: [userId], references: [id])
+  userId          Int
 }
