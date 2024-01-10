@@ -9,3 +9,7 @@ export class LoginRequestDto {
   @IsString()
   password: string;
 }
+
+export abstract class LoginResponseDto {
+  accessToken: string;
+}

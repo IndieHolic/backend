@@ -1,6 +1,7 @@
 import * as nodemailer from 'nodemailer';
 import { Injectable } from '@nestjs/common';
 import Mail from 'nodemailer/lib/mailer';
+import { StudioDto } from 'src/modules/studio/dtos/studio.dto';
 
 interface EmailOptions {
   to: string;
@@ -34,6 +35,20 @@ export class EmailService {
         <form action="${url}" method="POST">
           <button>가입확인</button>
         </form>
+      `,
+    };
+
+    return await this.transporter.sendMail(mailOptions);
+  }
+
+  async sendStudioInvitationEmail(email: string, studio: StudioDto) {
+    const baseUrl = 'http://localhost:3000';
+
+    const mailOptions: EmailOptions = {
+      to: email,
+      subject: `[IndieHolic] ${studio.name} 스튜디오 초대장`,
+      html: `
+        ${studio.name} 스튜디오에 초대되었습니다.
       `,
     };
 

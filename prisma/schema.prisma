@@ -80,6 +80,8 @@ model UserStudioLinks {
   studioId  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([userId, studioId])
 }
 
 model GameVersions {
@@ -153,6 +155,8 @@ model GameCategoryLinks {
   categoryId Int
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
+
+  @@unique([gameId, categoryId])
 }
 
 model GameCollections {
@@ -174,6 +178,8 @@ model GameCollectionLinks {
   gameId       Int
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
+
+  @@unique([collectionId, gameId])
 }
 
 model MainBanners {

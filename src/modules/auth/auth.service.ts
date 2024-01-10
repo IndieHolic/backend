@@ -4,12 +4,12 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { LoginRequestDto } from './dto/login-request.dto';
+import { LoginRequestDto } from './dtos/login.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/config/database/prisma.service';
 import { Users } from '@prisma/client';
-import { RegisterRequestDto } from 'src/modules/auth/dto/register-request.dto';
+import { RegisterRequestDto } from 'src/modules/auth/dtos/register.dto';
 import * as uuid from 'uuid';
 import { EmailService } from 'src/modules/email/email.service';
 
@@ -18,7 +18,7 @@ export class AuthService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
-    private emailService: EmailService,
+    private readonly emailService: EmailService,
   ) {}
 
   async login(loginRequsetDto: LoginRequestDto) {

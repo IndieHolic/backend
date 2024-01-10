@@ -1,9 +1,11 @@
 import { Body, Controller, Post, Query } from '@nestjs/common';
 import { AuthService } from 'src/modules/auth/auth.service';
-import { LoginRequestDto } from 'src/modules/auth/dto/login-request.dto';
-import { LoginResponseDto } from 'src/modules/auth/dto/login-response.dto';
-import { RegisterRequestDto } from 'src/modules/auth/dto/register-request.dto';
-import { SendEmailResponseDto } from 'src/modules/auth/dto/send-email-response';
+import {
+  LoginRequestDto,
+  LoginResponseDto,
+} from 'src/modules/auth/dtos/login.dto';
+import { RegisterRequestDto } from 'src/modules/auth/dtos/register.dto';
+import { SendEmailResponseDto } from 'src/modules/auth/dtos/send-email';
 
 @Controller('auth')
 export class AuthController {
