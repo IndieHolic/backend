@@ -22,9 +22,10 @@ import { Users } from '@prisma/client';
 import { CreateBoardDto, CreateFreeBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update-board.dto';
 import { TagParsePipe } from './pipes/tag-parse.pipe';
-import { CursorValidationPipe } from 'src/modules/board/pipes/cursor-validation.pipe';
+
 import { RealIP } from 'nestjs-real-ip';
-import { SearchValidationPipe } from 'src/modules/board/pipes/search-validation.pipe';
+import { CursorValidationPipe } from 'src/common/pipes/cursor-validation.pipe';
+import { SearchValidationPipe } from 'src/common/pipes/search-validation.pipe';
 
 @Controller('board')
 export class BoardController {
@@ -128,7 +129,10 @@ export class InfoBoardController {
 
 @Controller('board/free')
 export class FreeBoardController {
-  constructor(private readonly freeboardService: FreeBoardService) {}
+  constructor(
+    private readonly boardService: BoardService,
+    private readonly freeboardService: FreeBoardService,
+  ) {}
 
   @Post()
   @UseGuards(JwtGuard)
@@ -137,5 +141,27 @@ export class FreeBoardController {
     @Body() createFreeBoardDto: CreateFreeBoardDto,
   ) {
     return this.freeboardService.create(user.id, createFreeBoardDto);
+  }
+
+  @Get()
+  getFreeBoards(
+    @Query('cursor', CursorValidationPipe) cursor: number | null,
+    @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number,
+    @Query('search', SearchValidationPipe) search?: string,
+  ) {
+    return this.freeboardService.getFreeBoards(cursor, take, search);
+  }
+
+  @Get(':id')
+  getFreeBoardByID(
+    @Param('id', ParseIntPipe) id: number,
+    @RealIP() ip: string,
+  ) {
+    try {
+      this.boardService.addViewHistory(id, ip);
+    } catch (error) {
+      console.log(error);
+    }
+    return this.freeboardService.getFreeBoardByID(id);
   }
 }

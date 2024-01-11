@@ -10,6 +10,7 @@ import { BoardModule } from './modules/board/board.module';
   imports: [
     ConfigModule.forRoot({
       envFilePath: ['.env'],
+      isGlobal: true,
     }),
     PrismaModule,
     AuthModule,

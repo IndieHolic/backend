@@ -337,6 +337,26 @@ export class InfoBoardService {
 export class FreeBoardService {
   constructor(private readonly prismaService: PrismaService) {}
 
+  private readonly selectOption = {
+    ...BoardSelectOption,
+    parent: {
+      select: {
+        id: true,
+        title: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    },
+    Children: {
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    },
+  };
+
   async create(writerId: number, board: CreateFreeBoardDto) {
     if (!board.thumbnailUrl) {
       board.thumbnailUrl = defaultThumbnailUrl;
@@ -355,5 +375,37 @@ export class FreeBoardService {
     });
 
     return newBoard;
+  }
+
+  async getFreeBoards(cursor: number, take: number, search?: string) {
+    const boards = await this.prismaService.boards.findMany({
+      where: {
+        boardType: BoardType.Info,
+        OR: [
+          { title: { contains: search } },
+          { content: { contains: search } },
+        ],
+        deletedAt: null,
+      },
+      skip: cursor * take,
+      take,
+      select: this.selectOption,
+    });
+
+    return boards.map((board) => {
+      return { ...board, tags: board.tags.split(',') };
+    });
+  }
+
+  async getFreeBoardByID(id: number) {
+    const targetBoard = await this.prismaService.boards.findFirst({
+      where: { id, deletedAt: null },
+      select: this.selectOption,
+    });
+    if (!targetBoard) {
+      throw new NotFoundException();
+    }
+
+    return { ...targetBoard, tags: targetBoard.tags.split(',') };
   }
 }

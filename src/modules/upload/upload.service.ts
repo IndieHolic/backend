@@ -16,6 +16,7 @@ export class UploadService {
   }
 
   async uploadFile(file: Express.Multer.File) {
+    console.log(process.env);
     try {
       const folder = file.mimetype;
       const key = `${folder}/${Date.now()}_${basename(
