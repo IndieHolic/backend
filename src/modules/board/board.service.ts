@@ -10,6 +10,22 @@ import { defaultThumbnailUrl } from 'src/common/constants/url.constants';
 import { BoardType, LikeStatus } from '@prisma/client';
 import { UpdateBoardDto } from './dto/update-board.dto';
 
+const BoardSelectOption = {
+  id: true,
+  writer: {
+    select: { id: true, name: true },
+  },
+  title: true,
+  content: true,
+  thumbnailUrl: true,
+  tags: true,
+  likeCount: true,
+  dislikeCount: true,
+  viewCount: true,
+  createdAt: true,
+  updatedAt: true,
+};
+
 @Injectable()
 export class BoardService {
   constructor(private readonly prismaService: PrismaService) {}
@@ -216,6 +232,48 @@ export class BoardService {
 
     return result[0];
   }
+
+  async addViewHistory(boardId: number, ip: string) {
+    const targetBoard = await this.prismaService.boards.findFirst({
+      where: { id: boardId },
+      select: { id: true, updatedAt: true, viewCount: true },
+    });
+
+    const refTime = new Date();
+    refTime.setHours(refTime.getHours() - 1);
+
+    const history = await this.prismaService.boardViewHistory.findFirst({
+      where: {
+        ip,
+        boardId,
+        viewAt: {
+          gte: refTime,
+        },
+      },
+    });
+
+    if (history) {
+      this.prismaService.$transaction([
+        this.prismaService.boardViewHistory.create({
+          data: {
+            boardId,
+            ip,
+          },
+        }),
+        this.prismaService.boards.update({
+          where: {
+            id: boardId,
+          },
+          data: {
+            updatedAt: targetBoard.updatedAt,
+            viewCount: targetBoard.viewCount + 1,
+          },
+        }),
+      ]);
+    }
+
+    return;
+  }
 }
 
 @Injectable()
@@ -240,6 +298,38 @@ export class InfoBoardService {
     });
 
     return newBoard;
+  }
+
+  async getInfoBoards(cursor: number, take: number, search?: string) {
+    const boards = await this.prismaService.boards.findMany({
+      where: {
+        boardType: BoardType.Info,
+        OR: [
+          { title: { contains: search } },
+          { content: { contains: search } },
+        ],
+        deletedAt: null,
+      },
+      skip: cursor * take,
+      take,
+      select: BoardSelectOption,
+    });
+
+    return boards.map((board) => {
+      return { ...board, tags: board.tags.split(',') };
+    });
+  }
+
+  async getInfoBoardByID(id: number) {
+    const targetBoard = await this.prismaService.boards.findFirst({
+      where: { id, deletedAt: null },
+      select: BoardSelectOption,
+    });
+    if (!targetBoard) {
+      throw new NotFoundException();
+    }
+
+    return { ...targetBoard, tags: targetBoard.tags.split(',') };
   }
 }
 

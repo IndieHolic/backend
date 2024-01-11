@@ -1,11 +1,14 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
+  Get,
   Param,
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -19,6 +22,8 @@ import { Users } from '@prisma/client';
 import { CreateBoardDto, CreateFreeBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update-board.dto';
 import { TagParsePipe } from './pipes/tag-parse.pipe';
+import { CursorValidationPipe } from 'src/modules/board/pipes/cursor-validation.pipe';
+import { RealIP } from 'nestjs-real-ip';
 
 @Controller('board')
 export class BoardController {
@@ -82,7 +87,10 @@ export class BoardController {
 
 @Controller('board/info')
 export class InfoBoardController {
-  constructor(private readonly infoBoardService: InfoBoardService) {}
+  constructor(
+    private readonly boardService: BoardService,
+    private readonly infoBoardService: InfoBoardService,
+  ) {}
 
   @Post()
   @UseGuards(JwtGuard)
@@ -92,6 +100,28 @@ export class InfoBoardController {
   ) {
     console.log(createBoardDto);
     return this.infoBoardService.create(user.id, createBoardDto);
+  }
+
+  @Get()
+  getInfoBoards(
+    @Query('cursor', CursorValidationPipe) cursor: number | null,
+    @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number,
+    @Query('search') search?: string,
+  ) {
+    return this.infoBoardService.getInfoBoards(cursor, take, search);
+  }
+
+  @Get(':id')
+  getInfoBoardByID(
+    @Param('id', ParseIntPipe) id: number,
+    @RealIP() ip: string,
+  ) {
+    try {
+      this.boardService.addViewHistory(id, ip);
+    } catch (error) {
+      console.log(error);
+    }
+    return this.infoBoardService.getInfoBoardByID(id);
   }
 }
 
