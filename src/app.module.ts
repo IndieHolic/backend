@@ -4,12 +4,14 @@ import { UploadsModule } from './modules/upload/upload.module';
 import { ConfigModule } from '@nestjs/config';
 import { MulterModule } from '@nestjs/platform-express';
 import { AuthModule } from 'src/modules/auth/auth.module';
-import { UserModule } from 'src/modules/user/user.module';
+import { BoardModule } from './modules/board/board.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       envFilePath: ['.env'],
+      isGlobal: true,
     }),
     PrismaModule,
     AuthModule,
@@ -18,6 +20,7 @@ import { UserModule } from 'src/modules/user/user.module';
       dest: './uploads',
     }),
     UploadsModule,
+    BoardModule,
   ],
   providers: [],
 })

@@ -1,9 +1,9 @@
-import * as path from 'path';
+import { basename } from 'path';
 import { Injectable } from '@nestjs/common';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 @Injectable()
-export class UploadsService {
+export class UploadService {
   s3Client: S3Client;
   constructor() {
     this.s3Client = new S3Client({
@@ -16,9 +16,10 @@ export class UploadsService {
   }
 
   async uploadFile(file: Express.Multer.File) {
+    console.log(process.env);
     try {
       const folder = file.mimetype;
-      const key = `${folder}/${Date.now()}_${path.basename(
+      const key = `${folder}/${Date.now()}_${basename(
         file.originalname,
       )}`.replace(/ /g, '');
 
