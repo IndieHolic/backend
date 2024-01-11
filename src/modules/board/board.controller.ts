@@ -24,6 +24,7 @@ import { UpdateBoardDto } from './dto/update-board.dto';
 import { TagParsePipe } from './pipes/tag-parse.pipe';
 import { CursorValidationPipe } from 'src/modules/board/pipes/cursor-validation.pipe';
 import { RealIP } from 'nestjs-real-ip';
+import { SearchValidationPipe } from 'src/modules/board/pipes/search-validation.pipe';
 
 @Controller('board')
 export class BoardController {
@@ -106,7 +107,7 @@ export class InfoBoardController {
   getInfoBoards(
     @Query('cursor', CursorValidationPipe) cursor: number | null,
     @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number,
-    @Query('search') search?: string,
+    @Query('search', SearchValidationPipe) search?: string,
   ) {
     return this.infoBoardService.getInfoBoards(cursor, take, search);
   }

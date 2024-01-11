@@ -1,15 +1,10 @@
-import {
-  ArgumentMetadata,
-  BadRequestException,
-  Injectable,
-  PipeTransform,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 
 @Injectable()
 export class TagParsePipe implements PipeTransform {
-  transform(value: any, metadata: ArgumentMetadata) {
+  transform(value: any) {
     if (value.tags && Array.isArray(value.tags)) {
-      throw new BadRequestException();
+      throw new BadRequestException('tags must be an array or null');
     }
 
     if (!value.tags) {
