@@ -1,16 +1,11 @@
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  Param,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { Users } from '@prisma/client';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
-import { selectKeys } from 'src/common/utils/dict.util';
+import { selectKeys } from 'src/common/utils/json.util';
+import { checkNumber } from 'src/common/utils/exception.utils';
 import { JwtGuard } from 'src/modules/auth/guards/jwt.guard';
-import { GetMeResponseDto } from 'src/modules/user/dto/get-me-response.dto copy';
-import { GetUserResponseDto } from 'src/modules/user/dto/get-user-response.dto';
+import { GetMeResponseDto } from 'src/modules/user/dtos/get-me.dto';
+import { GetUserResponseDto } from 'src/modules/user/dtos/get-user.dto';
 import { UserService } from 'src/modules/user/user.service';
 
 @Controller('user')
@@ -32,10 +27,7 @@ export class UserController {
 
   @Get('/:id')
   async getUser(@Param('id') id: string): Promise<GetUserResponseDto> {
-    if (isNaN(Number(id))) {
-      throw new BadRequestException('id 형식이 올바르지 않습니다.');
-    }
-
-    return await this.userService.findOne(Number(id));
+    checkNumber(id);
+    return await this.userService.find(Number(id));
   }
 }

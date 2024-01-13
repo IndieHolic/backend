@@ -1,4 +1,4 @@
-export abstract class GetMeResponseDto {
+export abstract class UserDto {
   id: number;
   name: string;
   email: string;
