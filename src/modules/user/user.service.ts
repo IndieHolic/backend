@@ -1,22 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/config/database/prisma.service';
-import { GetUserResponseDto } from 'src/modules/user/dto/get-user-response.dto';
+import { SELECT_USER } from 'src/modules/user/constants/select.constant';
 
 @Injectable()
 export class UserService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async findOne(id: number): Promise<GetUserResponseDto> {
+  async find(id: number) {
     const user = await this.prismaService.users.findUnique({
       where: { id },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        isAdmin: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: SELECT_USER,
     });
 
     if (!user) {
