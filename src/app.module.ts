@@ -8,11 +8,13 @@ import { UserModule } from 'src/modules/user/user.module';
 import { StudioModule } from './modules/studio/studio.module';
 import { MainBannerModule } from './modules/main-banner/main-banner.module';
 import { GameSaleModule } from './modules/game-sale/game-sale.module';
+import { BoardModule } from './modules/board/board.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       envFilePath: ['.env'],
+      isGlobal: true,
     }),
     PrismaModule,
     AuthModule,
@@ -24,6 +26,8 @@ import { GameSaleModule } from './modules/game-sale/game-sale.module';
     StudioModule,
     MainBannerModule,
     GameSaleModule,
+    UploadModule,
+    BoardModule,
   ],
   providers: [],
 })

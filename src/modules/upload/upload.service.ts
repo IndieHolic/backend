@@ -9,6 +9,7 @@ import { FileType } from '@prisma/client';
 import { PrismaService } from 'src/config/database/prisma.service';
 import { HttpService } from '@nestjs/axios';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { basename } from 'path';
 
 @Injectable()
 export class UploadService {
@@ -29,9 +30,10 @@ export class UploadService {
   }
 
   async uploadFile(file: Express.Multer.File) {
+    console.log(process.env);
     try {
       const folder = file.mimetype;
-      const key = `${folder}/${Date.now()}_${path.basename(
+      const key = `${folder}/${Date.now()}_${basename(
         file.originalname,
       )}`.replace(/ /g, '');
 
