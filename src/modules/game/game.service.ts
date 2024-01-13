@@ -6,12 +6,36 @@ import {
 import { PrismaService } from 'src/config/database/prisma.service';
 import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
-import { title } from 'process';
 import { getPageOffset } from 'src/common/utils/pagination.util';
 
 @Injectable()
 export class GameService {
   constructor(private readonly prismaService: PrismaService) {}
+
+  private readonly gameSelectOption = {
+    id: true,
+    title: true,
+    studio: {
+      select: {
+        id: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    },
+    version: {
+      select: {
+        version: true,
+        fileId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    },
+    basePrice: true,
+    createdAt: true,
+    updatedAt: true,
+    GameCategories: true,
+  };
 
   async createGame(userId: number, game: CreateGameDto) {
     const studio = await this.prismaService.studios.findUnique({
@@ -36,6 +60,7 @@ export class GameService {
           version: {
             create: {
               version: game.version,
+              fileId: game.fileId,
             },
           },
         },
@@ -48,7 +73,12 @@ export class GameService {
 
   async updateGame(userId: number, gameId: number, game: UpdateGameDto) {
     const targetGame = await this.prismaService.games.findUnique({
-      where: { id: gameId },
+      where: {
+        id: gameId,
+        studio: {
+          UserStudioLinks: { some: { userId } },
+        },
+      },
       select: {
         title: true,
         version: { select: { id: true } },
@@ -60,44 +90,39 @@ export class GameService {
       throw new NotFoundException();
     }
 
-    if (
-      !targetGame.studio.UserStudioLinks.map((link) => link.userId).includes(
-        userId,
-      )
-    ) {
-      throw new ForbiddenException();
-    }
-
-    game.category = game.category ? game.category : [];
-
-    return await this.prismaService.games.update({
-      where: { id: gameId },
-      data: {
-        title: title,
-        basePrice: game.basePrice,
-        GameCategories: {
-          disconnect: targetGame.GameCategories,
-          connect: game.category.map((category) => {
-            return { name: category };
-          }),
-        },
-        version: {
-          create: {
-            version: game.version,
+    try {
+      return await this.prismaService.games.update({
+        where: { id: gameId },
+        data: {
+          title: game.title,
+          basePrice: game.basePrice,
+          GameCategories: {
+            disconnect: targetGame.GameCategories,
+            connect: game.category?.map((category) => {
+              return { name: category };
+            }),
+          },
+          version: {
+            create: {
+              version: game.version,
+              fileId: game.fileId,
+            },
           },
         },
-      },
-      select: {
-        id: true,
-        title: true,
-        studioId: true,
-        basePrice: true,
-        GameCategories: true,
-        version: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+        select: {
+          id: true,
+          title: true,
+          studioId: true,
+          basePrice: true,
+          GameCategories: true,
+          version: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 
   async deleteGame(userId: number, gameId: number) {
@@ -132,52 +157,60 @@ export class GameService {
   }
 
   async getGameCategory() {
-    return await this.prismaService.gameCategories.findMany();
+    return await this.prismaService.gameCategories.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
   }
 
-  async getGames(
+  async getGamesList(
     searchText: string,
     pageNumber: number,
     pageSize: number,
     collectionId: number,
     categoryNames: string[],
+    userId: number,
   ) {
-    console.log(searchText, collectionId);
+    const where = {
+      OR: [
+        { title: { contains: searchText } },
+        { description: { contains: searchText } },
+      ],
+      GameCollections: collectionId
+        ? {
+            some: { id: collectionId },
+          }
+        : undefined,
+      GameCategories: {
+        some: { name: { in: categoryNames } },
+      },
+    };
+
     const games = await this.prismaService.games.findMany({
-      where: {
-        OR: [
-          { title: { contains: searchText } },
-          { description: { contains: searchText } },
-        ],
-        // GameCollectionLinks: { some: { collectionId } },
-        GameCategories: {
-          some: {
-            name: { in: categoryNames },
+      where,
+      select: {
+        ...this.gameSelectOption,
+        GamePurchases: {
+          where: {
+            userId,
           },
         },
       },
       skip: getPageOffset(pageNumber, pageSize),
       take: pageSize,
     });
-    console.log(games);
 
     const totalCount = await this.prismaService.games.count({
-      where: {
-        OR: [
-          { title: { contains: searchText } },
-          { description: { contains: searchText } },
-        ],
-        GameCollectionLinks: { some: { collectionId } },
-        GameCategories: {
-          some: {
-            name: { in: categoryNames },
-          },
-        },
-      },
+      where,
     });
 
     return {
-      content: games,
+      content: games.map(({ GamePurchases, ...game }) => ({
+        ...game,
+        purchased: GamePurchases.length != 0,
+      })),
       pageNumber,
       pageSize,
       totalCount,
@@ -185,11 +218,24 @@ export class GameService {
     };
   }
 
-  async getGame(gameId: number) {
+  async getGameById(userId: number, gameId: number) {
     try {
-      return await this.prismaService.games.findUniqueOrThrow({
-        where: { id: gameId },
-      });
+      const { GamePurchases, ...game } =
+        await this.prismaService.games.findUniqueOrThrow({
+          where: { id: gameId },
+          select: {
+            ...this.gameSelectOption,
+            GamePurchases: {
+              where: {
+                userId,
+              },
+            },
+          },
+        });
+      return {
+        ...game,
+        purchased: GamePurchases.length != 0,
+      };
     } catch (error) {
       throw error;
     }

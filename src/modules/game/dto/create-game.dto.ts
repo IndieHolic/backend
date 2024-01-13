@@ -18,6 +18,10 @@ export class CreateGameDto {
   version: string;
 
   @IsNotEmpty()
+  @IsNumber()
+  fileId: number;
+
+  @IsNotEmpty()
   @IsArray()
   category: string[];
 

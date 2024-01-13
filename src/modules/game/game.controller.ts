@@ -21,6 +21,7 @@ import { Users } from '@prisma/client';
 import { IdValidationPipe } from 'src/common/pipes/id-validation.pipe';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { CursorValidationPipe } from 'src/common/pipes/cursor-validation.pipe';
+import { OptionalJwtGuard } from 'src/common/guards/optionalJwt.guard';
 
 @Controller('game')
 export class GameController {
@@ -87,22 +88,25 @@ export class GameController {
   }
 
   @Get()
-  async getGames(
+  @UseGuards(OptionalJwtGuard)
+  async getGamesList(
     @Query('searchText') searchText: string,
     @Query('pageNumber', CursorValidationPipe, new DefaultValuePipe(1))
     pageNumber: number,
-    @Query('pageSize', new DefaultValuePipe(10)) pageSize: number,
-    @Query('collectionId', IdValidationPipe) collectionId: number,
+    @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe) pageSize: number,
+    @Query('collectionId') collectionId: number,
     @Query('categoryNames', ParseArrayPipe)
     categoryNames: string[],
+    @CurrentUser() user: Users,
   ) {
     try {
-      return await this.gameService.getGames(
+      return await this.gameService.getGamesList(
         searchText,
         pageNumber,
         pageSize,
         collectionId,
         categoryNames,
+        user?.id,
       );
     } catch (error) {
       this.logger.error(error);
@@ -111,9 +115,13 @@ export class GameController {
   }
 
   @Get(':id')
-  async getGameById(@Param('id', ParseIntPipe) gameId: number) {
+  @UseGuards(OptionalJwtGuard)
+  async getGameById(
+    @CurrentUser() user: Users,
+    @Param('id', ParseIntPipe) gameId: number,
+  ) {
     try {
-      return await this.gameService.getGameById(gameId);
+      return await this.gameService.getGameById(user?.id, gameId);
     } catch (error) {
       this.logger.error(error);
       throw error;
