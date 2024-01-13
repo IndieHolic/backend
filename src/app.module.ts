@@ -6,6 +6,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { BoardModule } from './modules/board/board.module';
 import { UserModule } from './modules/user/user.module';
+import { GameModule } from './modules/game/game.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { UserModule } from './modules/user/user.module';
     }),
     UploadsModule,
     BoardModule,
+    GameModule,
   ],
   providers: [],
 })

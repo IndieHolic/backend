@@ -19,6 +19,13 @@ enum BoardType {
   QnA
 }
 
+enum GameRate {
+  ALL
+  TWELVE
+  FIFTEEN
+  EIGHTEEN
+}
+
 model Users {
   id                Int                 @id @default(autoincrement())
   name              String
@@ -54,19 +61,18 @@ model Games {
   studio              Studios               @relation(fields: [studioId], references: [id])
   studioId            Int
   basePrice           Int
-  GameCategories      GameCategories?       @relation(fields: [gameCategoriesId], references: [id])
-  gameCategoriesId    Int?
+  tags                String                @default("")
+  gameRate            GameRate              @default(ALL)
+  GameCategories      GameCategories[]
+  description         String                @default("")   
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 
   version             GameVersions[]
-  GameCategoryLinks   GameCategoryLinks[]
-  GameCollectionLinks GameCollectionLinks[]
+  GameCollectionLinks GameCollections[]
   GameSales           GameSales[]
   GameReviews         GameReviews[]
   GamePurchases       GamePurchases[]
-
-  @@map("games")
 }
 
 model Studios {
@@ -157,21 +163,10 @@ model GamePurchases {
 
 model GameCategories {
   id                Int                 @id @default(autoincrement())
-  name              String
+  name              String              @unique
   Games             Games[]
-  GameCategoryLinks GameCategoryLinks[]
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
-}
-
-model GameCategoryLinks {
-  id         Int            @id @default(autoincrement())
-  game       Games          @relation(fields: [gameId], references: [id])
-  gameId     Int
-  category   GameCategories @relation(fields: [categoryId], references: [id])
-  categoryId Int
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
 }
 
 model GameCollections {
@@ -180,20 +175,11 @@ model GameCollections {
   description         String
   startAt             DateTime
   endAt               DateTime
-  GameCollectionLinks GameCollectionLinks[]
+  Games               Games[]
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 }
 
-model GameCollectionLinks {
-  id           Int             @id @default(autoincrement())
-  collection   GameCollections @relation(fields: [collectionId], references: [id])
-  collectionId Int
-  game         Games           @relation(fields: [gameId], references: [id])
-  gameId       Int
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-}
 
 model MainBanners {
   id              Int      @id @default(autoincrement())
