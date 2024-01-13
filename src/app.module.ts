@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from 'src/config/database/prisma.module';
-import { UploadsModule } from './modules/upload/upload.module';
+import { UploadModule } from './modules/upload/upload.module';
 import { ConfigModule } from '@nestjs/config';
 import { MulterModule } from '@nestjs/platform-express';
 import { AuthModule } from 'src/modules/auth/auth.module';
@@ -20,7 +20,7 @@ import { GameSaleModule } from './modules/game-sale/game-sale.module';
     MulterModule.register({
       dest: './uploads',
     }),
-    UploadsModule,
+    UploadModule,
     StudioModule,
     MainBannerModule,
     GameSaleModule,

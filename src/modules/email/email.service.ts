@@ -42,8 +42,6 @@ export class EmailService {
   }
 
   async sendStudioInvitationEmail(email: string, studio: StudioDto) {
-    const baseUrl = 'http://localhost:3000';
-
     const mailOptions: EmailOptions = {
       to: email,
       subject: `[IndieHolic] ${studio.name} 스튜디오 초대장`,

@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Users } from '@prisma/client';
 import { getPageOffset } from 'src/common/utils/pagination.util';
 import { PrismaService } from 'src/config/database/prisma.service';
 import { EmailService } from 'src/modules/email/email.service';
@@ -32,6 +37,15 @@ export class StudioService {
     createStudioRequestDto: CreateStudioRequestDto,
   ) {
     const { name } = createStudioRequestDto;
+
+    const existingStudio = await this.prismaService.studios.findUnique({
+      where: { name },
+    });
+
+    if (existingStudio) {
+      throw new BadRequestException('이미 존재하는 스튜디오 이름입니다.');
+    }
+
     const studio = await this.prismaService.studios.create({
       data: {
         name,
@@ -74,7 +88,11 @@ export class StudioService {
     }
   }
 
-  async invite(id: number, inviteStudioRequestDto: InviteStudioRequestDto) {
+  async invite(
+    id: number,
+    inviteStudioRequestDto: InviteStudioRequestDto,
+    user: Users,
+  ) {
     const { emails } = inviteStudioRequestDto;
     const studio = await this.prismaService.studios.findUnique({
       where: { id },
@@ -85,7 +103,51 @@ export class StudioService {
       throw new BadRequestException('존재하지 않는 스튜디오입니다.');
     }
 
-    for (const email of emails) {
+    const studioInvitations =
+      await this.prismaService.studioInvitations.findMany({
+        where: {
+          studioId: id,
+          expiredAt: { gte: new Date() },
+        },
+      });
+
+    const existingEmails = studioInvitations.map(
+      (studioInvitation) => studioInvitation.email,
+    );
+
+    const filteredEmails = emails.filter(
+      (email) => !existingEmails.includes(email),
+    );
+
+    const userStudioLinks = await this.prismaService.userStudioLinks.findMany({
+      where: {
+        studioId: id,
+      },
+    });
+
+    const memberIds = userStudioLinks.map((member) => member.id);
+    const members = await this.prismaService.users.findMany({
+      where: {
+        id: {
+          in: memberIds,
+        },
+      },
+    });
+    const memberEmails = members.map((member) => member.email);
+
+    filteredEmails.filter((email) => !memberEmails.includes(email));
+
+    if (filteredEmails.length === 0) {
+      throw new BadRequestException(
+        '모두 이미 초대되었거나 존재하는 초대입니다.',
+      );
+    }
+
+    if (filteredEmails.includes(user.email)) {
+      throw new BadRequestException('본인은 초대할 수 없습니다.');
+    }
+
+    for (const email of filteredEmails) {
       await this.prismaService.studioInvitations.create({
         data: {
           email,
@@ -207,7 +269,7 @@ export class StudioService {
     }
 
     if (studio.managerId !== userId) {
-      throw new BadRequestException('해당 스튜디오의 관리자가 아닙니다.');
+      throw new UnauthorizedException('해당 스튜디오의 관리자가 아닙니다.');
     }
   }
 }

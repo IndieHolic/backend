@@ -13,13 +13,17 @@ model Users {
   email             String              @unique
   password          String
   isAdmin           Boolean             @default(false)
-  Studios           Studios[]
-  UserStudioLinks   UserStudioLinks[]
-  GameReviews       GameReviews[]
-  GameReviewReplies GameReviewReplies[]
-  GamePurchases     GamePurchases[]
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
+  BoardComments     BoardComments[]
+  BoardLikes        BoardLikes[]
+  Boards            Boards[]
+  GamePurchases     GamePurchases[]
+  GameReviewReplies GameReviewReplies[]
+  GameReviews       GameReviews[]
+  Studios           Studios[]
+  UserStudioLinks   UserStudioLinks[]
+  Files             Files[]
 }
 
 model EmailVerifications {
@@ -32,54 +36,36 @@ model EmailVerifications {
   updatedAt  DateTime @updatedAt
 }
 
-model Games {
-  id                  Int                   @id @default(autoincrement())
-  title               String
-  studio              Studios               @relation(fields: [studioId], references: [id])
-  studioId            Int
-  basePrice           Int
-  GameCategories      GameCategories?       @relation(fields: [gameCategoriesId], references: [id])
-  gameCategoriesId    Int?
-  version             GameVersions[]
-  GameCategoryLinks   GameCategoryLinks[]
-  GameCollectionLinks GameCollectionLinks[]
-  GameSales           GameSales[]
-  GameReviews         GameReviews[]
-  GamePurchases       GamePurchases[]
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-}
-
 model Studios {
   id                Int                 @id @default(autoincrement())
-  name              String
-  manager           Users               @relation(fields: [managerId], references: [id])
+  name              String              @unique
   managerId         Int
-  Games             Games[]
-  UserStudioLinks   UserStudioLinks[]
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   StudioInvitations StudioInvitations[]
+  manager           Users               @relation(fields: [managerId], references: [id])
+  UserStudioLinks   UserStudioLinks[]
+  games             games[]
 }
 
 model StudioInvitations {
   id        Int      @id @default(autoincrement())
-  studio    Studios  @relation(fields: [studioId], references: [id])
   studioId  Int
   email     String
   expiredAt DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  studio    Studios  @relation(fields: [studioId], references: [id], onDelete: Cascade)
 }
 
 model UserStudioLinks {
   id        Int      @id @default(autoincrement())
-  user      Users    @relation(fields: [userId], references: [id])
   userId    Int
-  studio    Studios  @relation(fields: [studioId], references: [id])
   studioId  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  studio    Studios  @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  user      Users    @relation(fields: [userId], references: [id])
 
   @@unique([userId, studioId])
 }
@@ -87,76 +73,65 @@ model UserStudioLinks {
 model GameVersions {
   id        Int      @id @default(autoincrement())
   version   String
-  Games     Games?   @relation(fields: [gamesId], references: [id])
-  gamesId   Int?
+  gameId    Int
+  fileId    Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  Games     games    @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  Files     Files    @relation(fields: [fileId], references: [id])
 }
 
 model GameSales {
   id        Int      @id @default(autoincrement())
-  game      Games    @relation(fields: [gameId], references: [id])
   gameId    Int
   percent   Int
   startAt   DateTime
   endAt     DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  game      games    @relation(fields: [gameId], references: [id])
 }
 
 model GameReviews {
   id                Int                 @id @default(autoincrement())
-  game              Games               @relation(fields: [gameId], references: [id])
   gameId            Int
-  user              Users               @relation(fields: [userId], references: [id])
   userId            Int
   content           String
-  GameReviewReplies GameReviewReplies[]
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
+  GameReviewReplies GameReviewReplies[]
+  game              games               @relation(fields: [gameId], references: [id])
+  user              Users               @relation(fields: [userId], references: [id])
 }
 
 model GameReviewReplies {
   id        Int         @id @default(autoincrement())
-  review    GameReviews @relation(fields: [reviewId], references: [id])
   reviewId  Int
-  user      Users       @relation(fields: [userId], references: [id])
   userId    Int
   content   String
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+  review    GameReviews @relation(fields: [reviewId], references: [id])
+  user      Users       @relation(fields: [userId], references: [id])
 }
 
 model GamePurchases {
   id            Int      @id @default(autoincrement())
-  user          Users    @relation(fields: [userId], references: [id])
   userId        Int
-  game          Games    @relation(fields: [gameId], references: [id])
   gameId        Int
   purchasePrice Int
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  game          games    @relation(fields: [gameId], references: [id])
+  user          Users    @relation(fields: [userId], references: [id])
 }
 
 model GameCategories {
-  id                Int                 @id @default(autoincrement())
-  name              String
-  Games             Games[]
-  GameCategoryLinks GameCategoryLinks[]
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-}
-
-model GameCategoryLinks {
-  id         Int            @id @default(autoincrement())
-  game       Games          @relation(fields: [gameId], references: [id])
-  gameId     Int
-  category   GameCategories @relation(fields: [categoryId], references: [id])
-  categoryId Int
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
-
-  @@unique([gameId, categoryId])
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  games     games[]  @relation("GameCategoriesToGames")
 }
 
 model GameCollections {
@@ -165,21 +140,19 @@ model GameCollections {
   description         String
   startAt             DateTime
   endAt               DateTime
-  GameCollectionLinks GameCollectionLinks[]
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
+  GameCollectionLinks GameCollectionLinks[]
 }
 
 model GameCollectionLinks {
   id           Int             @id @default(autoincrement())
-  collection   GameCollections @relation(fields: [collectionId], references: [id])
   collectionId Int
-  game         Games           @relation(fields: [gameId], references: [id])
   gameId       Int
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
-
-  @@unique([collectionId, gameId])
+  collection   GameCollections @relation(fields: [collectionId], references: [id])
+  game         games           @relation(fields: [gameId], references: [id])
 }
 
 model MainBanners {
@@ -189,8 +162,108 @@ model MainBanners {
   link            String
   title           String?
   iconImage       String?
-  backgroundImage String
+  backgroundImage String?
   description     String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model BoardComments {
+  id        Int       @id @default(autoincrement())
+  writerId  Int
+  content   String
+  boardId   Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime
+  deletedAt DateTime?
+  Boards    Boards    @relation(fields: [boardId], references: [id])
+  Users     Users     @relation(fields: [writerId], references: [id])
+}
+
+model BoardLikes {
+  id        Int        @id @default(autoincrement())
+  userId    Int
+  status    LikeStatus
+  boardId   Int
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  Boards    Boards     @relation(fields: [boardId], references: [id])
+  Users     Users      @relation(fields: [userId], references: [id])
+}
+
+model BoardViewHistory {
+  id      Int      @id @default(autoincrement())
+  boardId Int?
+  viewAt  DateTime @default(now())
+  ip      String
+  Boards  Boards?  @relation(fields: [boardId], references: [id])
+}
+
+model Boards {
+  id               Int                @id @default(autoincrement())
+  writerId         Int
+  title            String
+  content          String
+  thumbnailUrl     String
+  likeCount        Int                @default(0)
+  dislikeCount     Int                @default(0)
+  boardType        BoardType
+  parentId         Int?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  deletedAt        DateTime?
+  tags             String             @default("")
+  viewCount        Int                @default(0)
+  BoardComments    BoardComments[]
+  BoardLikes       BoardLikes[]
+  BoardViewHistory BoardViewHistory[]
+  Boards           Boards?            @relation("BoardsToBoards", fields: [parentId], references: [id])
+  other_Boards     Boards[]           @relation("BoardsToBoards")
+  Users            Users              @relation(fields: [writerId], references: [id])
+}
+
+model games {
+  id                  Int                   @id @default(autoincrement())
+  title               String
+  studioId            Int
+  basePrice           Int
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime
+  GameCollectionLinks GameCollectionLinks[]
+  GamePurchases       GamePurchases[]
+  GameReviews         GameReviews[]
+  GameSales           GameSales[]
+  version             GameVersions[]
+  Studios             Studios               @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  GameCategories      GameCategories[]      @relation("GameCategoriesToGames")
+}
+
+enum BoardType {
+  Info
+  free
+  QnA
+}
+
+enum LikeStatus {
+  Like
+  Dislike
+  None
+}
+
+enum FileType {
+  GAME
+  ASSET
+  ETC
+}
+
+model Files {
+  id           Int            @id @default(autoincrement())
+  key          String         @unique
+  type         FileType
+  size         Int
+  ownerId      Int?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  GameVersions GameVersions[]
+  Users        Users?         @relation(fields: [ownerId], references: [id])
 }

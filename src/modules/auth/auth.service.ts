@@ -59,6 +59,12 @@ export class AuthService {
       throw new UnauthorizedException('이메일 인증이 완료되지 않았습니다.');
     }
 
+    if (emailVerification.email !== email) {
+      throw new UnauthorizedException(
+        '인증한 이메일과 다른 이메일로 가입할 수 없습니다.',
+      );
+    }
+
     await this.prismaService.users.create({
       data: {
         email,

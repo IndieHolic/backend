@@ -31,6 +31,30 @@ import { StudioService } from 'src/modules/studio/studio.service';
 export class StudioController {
   constructor(private readonly studioService: StudioService) {}
 
+  @Get('/joined')
+  @UseGuards(JwtGuard)
+  async getJoinedStudio(
+    @CurrentUser() currentUser: Users,
+    @Query('pageNumber') pageNumber: string,
+    @Query('pageSize') pageSize: string,
+  ): Promise<GetJoinedStudioResponseDto> {
+    console.log('pageNumber', pageNumber);
+    console.log('pageSize', pageSize);
+    checkNumber(pageNumber);
+    checkNumber(pageSize);
+    const { totalCount, studios } = await this.studioService.findByUser(
+      currentUser.id,
+      Number(pageNumber),
+      Number(pageSize),
+    );
+    return new PageDto(
+      Number(pageNumber),
+      Number(pageSize),
+      totalCount,
+      studios,
+    );
+  }
+
   @Get('/:id')
   async getStudio(@Param('id') id: string): Promise<GetStudioResponseDto> {
     checkNumber(id);
@@ -81,7 +105,11 @@ export class StudioController {
   ) {
     checkNumber(id);
     this.studioService.checkManager(Number(id), currentUser.id);
-    await this.studioService.invite(Number(id), inviteStudioRequestDto);
+    await this.studioService.invite(
+      Number(id),
+      inviteStudioRequestDto,
+      currentUser,
+    );
   }
 
   @Post('/:id/join')
@@ -99,27 +127,5 @@ export class StudioController {
   ) {
     checkNumber(id);
     await this.studioService.leave(Number(id), currentUser.id);
-  }
-
-  @Get('/studio/joined')
-  @UseGuards(JwtGuard)
-  async getJoinedStudio(
-    @CurrentUser() currentUser: Users,
-    @Query('pageNumber') pageNumber: string,
-    @Query('pageSize') pageSize: string,
-  ): Promise<GetJoinedStudioResponseDto> {
-    checkNumber(pageNumber);
-    checkNumber(pageSize);
-    const { totalCount, studios } = await this.studioService.findByUser(
-      currentUser.id,
-      Number(pageNumber),
-      Number(pageSize),
-    );
-    return new PageDto(
-      Number(pageNumber),
-      Number(pageSize),
-      totalCount,
-      studios,
-    );
   }
 }
