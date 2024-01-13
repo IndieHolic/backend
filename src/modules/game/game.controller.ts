@@ -113,7 +113,7 @@ export class GameController {
   @Get(':id')
   async getGameById(@Param('id', ParseIntPipe) gameId: number) {
     try {
-      return;
+      return await this.gameService.getGameById(gameId);
     } catch (error) {
       this.logger.error(error);
       throw error;
