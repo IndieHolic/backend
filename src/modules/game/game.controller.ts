@@ -23,6 +23,7 @@ import { UpdateGameDto } from './dto/update-game.dto';
 import { CursorValidationPipe } from 'src/common/pipes/cursor-validation.pipe';
 import { OptionalJwtGuard } from 'src/common/guards/optionalJwt.guard';
 import { SetTagsDto } from './dto/set-tags.dto';
+import { CreateGamePlayHistoryDto } from './dto/create-history.dto';
 
 @Controller('game')
 export class GameController {
@@ -183,9 +184,14 @@ export class GamePlayController {
   async createGamePlayHistory(
     @CurrentUser() user: Users,
     @Param('id', IdValidationPipe) gameId: number,
+    @Body() createGamePlayHistoryDto: CreateGamePlayHistoryDto,
   ) {
     try {
-      return await this.gamePlayService.checkIsPlayable(user.id, gameId);
+      return await this.gamePlayService.createGamePlayHistory(
+        user.id,
+        gameId,
+        createGamePlayHistoryDto,
+      );
     } catch (error) {
       this.logger.error(error);
       throw error;

@@ -8,6 +8,7 @@ import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { getPageOffset } from 'src/common/utils/pagination.util';
 import { SetTagsDto } from './dto/set-tags.dto';
+import { CreateGamePlayHistoryDto } from './dto/create-history.dto';
 
 @Injectable()
 export class GameService {
@@ -347,27 +348,65 @@ export class GamePlayService {
           },
         },
       });
-
       const now = new Date();
       const userPasses = await this.prismaService.agoraPasses.findMany({
         where: { userId, startAt: { lt: now }, endAt: { gt: now } },
-        select: { totalTime: true },
+        select: { id: true, totalTime: true, startAt: true, endAt: true },
+      });
+
+      let startAt: Date = userPasses[0].startAt;
+      let endAt: Date = userPasses[0].endAt;
+      let totalTime: number = 0;
+      userPasses.forEach((pass) => {
+        if (startAt < pass.startAt) {
+          startAt = pass.startAt;
+        }
+        if (endAt > pass.endAt) {
+          endAt = pass.endAt;
+        }
+        totalTime += pass.totalTime;
       });
 
       const histories = await this.prismaService.gamePlayHistories.findMany({
-        where: { userId },
+        where: { userId, startAt: { gt: startAt }, endAt: { lt: endAt } },
       });
+      const playedTime = histories.reduce((acc, cur) => acc + cur.totalTime, 0);
+      const remainTime = totalTime - playedTime;
+      if (targetGame.GamePurchases.length || remainTime) {
+        return { id: gameId, playable: true, remainTime };
+      } else {
+        return { id: gameId, playable: false, remainTime };
+      }
     } catch (error) {
       throw error;
     }
   }
 
-  async createGamePlayHistory(userId: number, gameId: number) {
+  async createGamePlayHistory(
+    userId: number,
+    gameId: number,
+    history: CreateGamePlayHistoryDto,
+  ) {
     try {
       const targetGame = this.prismaService.games.findUniqueOrThrow({
         where: { id: gameId },
       });
-      return await this.prismaService.gamePlayHistory.create({});
+
+      const totalTime = Math.floor(
+        (new Date(history.endAt).getTime() -
+          new Date(history.startAt).getTime()) /
+          1000,
+      );
+
+      return await this.prismaService.gamePlayHistories.create({
+        data: {
+          startAt: history.startAt,
+          endAt: history.endAt,
+          userId,
+          gameId,
+          totalTime,
+        },
+      });
     } catch (error) {
       throw error;
     }

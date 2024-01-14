@@ -309,8 +309,8 @@ model GamePlayHistories {
   startAt     DateTime
   endAt       DateTime
   totalTime   Int
-  userId    Int
-  Users     Users     @relation(fields: [userId], references: [id])
+  userId      Int
+  Users       Users     @relation(fields: [userId], references: [id])
   gameId      Int
   Games       Games       @relation(fields: [gameId], references: [id])
 }
