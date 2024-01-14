@@ -10,6 +10,7 @@ import { GameSaleModule } from './modules/game-sale/game-sale.module';
 import { BoardModule } from './modules/board/board.module';
 import { UserModule } from './modules/user/user.module';
 import { GameModule } from './modules/game/game.module';
+import { AgoraPassModule } from './modules/agora-pass/agora-pass.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { GameModule } from './modules/game/game.module';
     UploadModule,
     BoardModule,
     GameModule,
+    AgoraPassModule,
   ],
   providers: [],
 })
