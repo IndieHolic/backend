@@ -13,7 +13,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { GameService } from './game.service';
+import { GamePlayService, GameService } from './game.service';
 import { CreateGameDto } from './dto/create-game.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { JwtGuard } from '../auth/guards/jwt.guard';
@@ -138,6 +138,54 @@ export class GameController {
   ) {
     try {
       return await this.gameService.setGameTags(user?.id, gameId, input);
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
+
+  @Post(':id/purchase')
+  @UseGuards(JwtGuard)
+  async purchaseGame(
+    @CurrentUser() user: Users,
+    @Param('id', ParseIntPipe) gameId: number,
+  ) {
+    try {
+      return await this.gameService.purchaseGame(user.id, gameId);
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
+}
+
+@Controller('game/play')
+export class GamePlayController {
+  private readonly logger = new Logger(GamePlayController.name);
+  constructor(private readonly gamePlayService: GamePlayService) {}
+
+  @Get(':id')
+  @UseGuards(JwtGuard)
+  async checkIsPlayable(
+    @CurrentUser() user: Users,
+    @Param('id', IdValidationPipe) gameId: number,
+  ) {
+    try {
+      return await this.gamePlayService.checkIsPlayable(user.id, gameId);
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
+
+  @Post(':id')
+  @UseGuards(JwtGuard)
+  async createGamePlayHistory(
+    @CurrentUser() user: Users,
+    @Param('id', IdValidationPipe) gameId: number,
+  ) {
+    try {
+      return await this.gamePlayService.checkIsPlayable(user.id, gameId);
     } catch (error) {
       this.logger.error(error);
       throw error;

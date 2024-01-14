@@ -44,6 +44,9 @@ model Users {
   BoardLikes        BoardLikes[]
   BoardComments     BoardComments[]
   Files             Files[]
+  GameTagUserLink   GameTagUserLinks[]
+  AgoraPasses       AgoraPasses[]
+  GamePlayHistories GamePlayHistories[]
 }
 
 model EmailVerifications {
@@ -65,6 +68,7 @@ model Games {
   tags           String           @default("")
   gameRate       GameRate         @default(ALL)
   GameCategories GameCategories[]
+  PopularTags    GameTags[]
   description    String           @default("")
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -74,6 +78,8 @@ model Games {
   GameSales           GameSales[]
   GameReviews         GameReviews[]
   GamePurchases       GamePurchases[]
+  GameTagUserLinks    GameTagUserLinks[]
+  GamePlayHistories   GamePlayHistories[]
 }
 
 model Studios {
@@ -269,4 +275,42 @@ model Files {
   updatedAt    DateTime       @updatedAt
   GameVersions GameVersions[]
   Users        Users?         @relation(fields: [ownerId], references: [id])
+}
+
+model GameTags {
+  id              Int       @id @default(autoincrement())
+  name            String    @unique
+  
+  Games           Games[]
+  GameTagUserLink GameTagUserLinks[]
+}
+
+model GameTagUserLinks {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  Users     Users     @relation(fields: [userId], references: [id])
+  gameId    Int
+  Games      Games     @relation(fields: [gameId], references: [id])
+  tagId     Int
+  GameTags  GameTags  @relation(fields: [tagId], references: [id])
+}
+
+model AgoraPasses {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  Users     Users     @relation(fields: [userId], references: [id])
+  startAt   DateTime  @default(now())
+  endAt     DateTime
+  totalTime Int
+}
+
+model GamePlayHistories {
+  id          Int         @id @default(autoincrement())
+  startAt     DateTime
+  endAt       DateTime
+  totalTime   Int
+  userId    Int
+  Users     Users     @relation(fields: [userId], references: [id])
+  gameId      Int
+  Games       Games       @relation(fields: [gameId], references: [id])
 }

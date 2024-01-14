@@ -36,7 +36,7 @@ export class GameService {
     createdAt: true,
     updatedAt: true,
     GameCategories: true,
-    tags: true,
+    PopularTags: true,
   };
 
   async createGame(userId: number, game: CreateGameDto) {
@@ -189,7 +189,7 @@ export class GameService {
         some: { name: { in: categoryNames } },
       },
     };
-
+    const now = new Date();
     const games = await this.prismaService.games.findMany({
       where,
       select: {
@@ -197,6 +197,16 @@ export class GameService {
         GamePurchases: {
           where: {
             userId,
+          },
+        },
+        GameSales: {
+          where: {
+            startAt: {
+              lt: now,
+            },
+            endAt: {
+              gt: now,
+            },
           },
         },
       },
@@ -209,10 +219,10 @@ export class GameService {
     });
 
     return {
-      content: games.map(({ GamePurchases, tags, ...game }) => ({
+      content: games.map(({ GamePurchases, GameSales, ...game }) => ({
         ...game,
-        tags: tags.length ? tags?.split(',') : [],
         purchased: GamePurchases.length != 0,
+        salePercentage: GameSales[0]?.percent || 0,
       })),
       pageNumber,
       pageSize,
@@ -223,7 +233,8 @@ export class GameService {
 
   async getGameById(userId: number, gameId: number) {
     try {
-      const { GamePurchases, tags, ...game } =
+      const now = new Date();
+      const { GamePurchases, GameSales, ...game } =
         await this.prismaService.games.findUniqueOrThrow({
           where: { id: gameId },
           select: {
@@ -233,12 +244,22 @@ export class GameService {
                 userId,
               },
             },
+            GameSales: {
+              where: {
+                startAt: {
+                  lt: now,
+                },
+                endAt: {
+                  gt: now,
+                },
+              },
+            },
           },
         });
 
       return {
         ...game,
-        tags: tags.split(','),
+        salePercentage: GameSales[0]?.percent || 0,
         purchased: GamePurchases.length != 0,
       };
     } catch (error) {
@@ -262,11 +283,93 @@ export class GameService {
       },
     });
 
-    return await this.prismaService.games.update({
-      where: { id: gameId },
+    await this.prismaService.games.update({
+      where: {
+        id: gameId,
+      },
       data: {
-        tags: input.tags.join(),
+        PopularTags: {
+          set: input.tags.map((tag) => ({ name: tag })),
+        },
       },
     });
+  }
+
+  async purchaseGame(userId: number, gameId: number) {
+    try {
+      const now = new Date();
+      const targetGame = await this.prismaService.games.findUniqueOrThrow({
+        where: { id: gameId },
+        select: {
+          basePrice: true,
+          GameSales: {
+            where: {
+              startAt: {
+                lt: now,
+              },
+              endAt: {
+                gt: now,
+              },
+            },
+          },
+        },
+      });
+
+      return await this.prismaService.gamePurchases.create({
+        data: {
+          gameId,
+          userId,
+          purchasePrice:
+            targetGame.basePrice *
+            (100 - (targetGame.GameSales[0]?.percent || 0)) *
+            0.01,
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+}
+
+@Injectable()
+export class GamePlayService {
+  constructor(private readonly prismaService: PrismaService) {}
+
+  async checkIsPlayable(userId: number, gameId: number) {
+    try {
+      const targetGame = await this.prismaService.games.findUniqueOrThrow({
+        where: {
+          id: gameId,
+        },
+        select: {
+          GamePurchases: {
+            where: { userId },
+          },
+        },
+      });
+
+      const now = new Date();
+      const userPasses = await this.prismaService.agoraPasses.findMany({
+        where: { userId, startAt: { lt: now }, endAt: { gt: now } },
+        select: { totalTime: true },
+      });
+
+      const histories = await this.prismaService.gamePlayHistories.findMany({
+        where: { userId },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async createGamePlayHistory(userId: number, gameId: number) {
+    try {
+      const targetGame = this.prismaService.games.findUniqueOrThrow({
+        where: { id: gameId },
+      });
+      return await this.prismaService.gamePlayHistory.create({});
+    } catch (error) {
+      throw error;
+    }
   }
 }
