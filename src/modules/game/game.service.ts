@@ -7,6 +7,7 @@ import { PrismaService } from 'src/config/database/prisma.service';
 import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { getPageOffset } from 'src/common/utils/pagination.util';
+import { SetTagsDto } from './dto/set-tags.dto';
 
 @Injectable()
 export class GameService {
@@ -35,6 +36,7 @@ export class GameService {
     createdAt: true,
     updatedAt: true,
     GameCategories: true,
+    tags: true,
   };
 
   async createGame(userId: number, game: CreateGameDto) {
@@ -207,8 +209,9 @@ export class GameService {
     });
 
     return {
-      content: games.map(({ GamePurchases, ...game }) => ({
+      content: games.map(({ GamePurchases, tags, ...game }) => ({
         ...game,
+        tags: tags.length ? tags?.split(',') : [],
         purchased: GamePurchases.length != 0,
       })),
       pageNumber,
@@ -220,7 +223,7 @@ export class GameService {
 
   async getGameById(userId: number, gameId: number) {
     try {
-      const { GamePurchases, ...game } =
+      const { GamePurchases, tags, ...game } =
         await this.prismaService.games.findUniqueOrThrow({
           where: { id: gameId },
           select: {
@@ -232,12 +235,38 @@ export class GameService {
             },
           },
         });
+
       return {
         ...game,
+        tags: tags.split(','),
         purchased: GamePurchases.length != 0,
       };
     } catch (error) {
       throw error;
     }
+  }
+
+  async setGameTags(userId: number, gameId: number, input: SetTagsDto) {
+    await this.prismaService.games.findUniqueOrThrow({
+      where: {
+        id: gameId,
+        studio: {
+          UserStudioLinks: { some: { userId } },
+        },
+      },
+      select: {
+        title: true,
+        version: { select: { id: true } },
+        studio: { select: { UserStudioLinks: true } },
+        GameCategories: { select: { name: true } },
+      },
+    });
+
+    return await this.prismaService.games.update({
+      where: { id: gameId },
+      data: {
+        tags: input.tags.join(),
+      },
+    });
   }
 }

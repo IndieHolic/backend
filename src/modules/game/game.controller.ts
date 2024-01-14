@@ -22,6 +22,7 @@ import { IdValidationPipe } from 'src/common/pipes/id-validation.pipe';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { CursorValidationPipe } from 'src/common/pipes/cursor-validation.pipe';
 import { OptionalJwtGuard } from 'src/common/guards/optionalJwt.guard';
+import { SetTagsDto } from './dto/set-tags.dto';
 
 @Controller('game')
 export class GameController {
@@ -122,6 +123,21 @@ export class GameController {
   ) {
     try {
       return await this.gameService.getGameById(user?.id, gameId);
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
+
+  @Post(':id/tag')
+  @UseGuards(JwtGuard)
+  async setGameTag(
+    @CurrentUser() user: Users,
+    @Param('id', ParseIntPipe) gameId: number,
+    @Body() input: SetTagsDto,
+  ) {
+    try {
+      return await this.gameService.setGameTags(user?.id, gameId, input);
     } catch (error) {
       this.logger.error(error);
       throw error;
