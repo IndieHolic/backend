@@ -78,7 +78,7 @@ model Games {
 
 model Studios {
   id                Int                 @id @default(autoincrement())
-  name              String
+  name              String              @unique
   manager           Users               @relation(fields: [managerId], references: [id])
   managerId         Int
   Games             Games[]
@@ -106,6 +106,8 @@ model UserStudioLinks {
   studioId  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([userId, studioId])
 }
 
 model GameVersions {
