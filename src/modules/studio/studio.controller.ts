@@ -38,8 +38,6 @@ export class StudioController {
     @Query('pageNumber') pageNumber: string,
     @Query('pageSize') pageSize: string,
   ): Promise<GetJoinedStudioResponseDto> {
-    console.log('pageNumber', pageNumber);
-    console.log('pageSize', pageSize);
     checkNumber(pageNumber);
     checkNumber(pageSize);
     const { totalCount, studios } = await this.studioService.findByUser(
