@@ -26,6 +26,7 @@ import { TagParsePipe } from './pipes/tag-parse.pipe';
 import { RealIP } from 'nestjs-real-ip';
 import { CursorValidationPipe } from 'src/common/pipes/cursor-validation.pipe';
 import { SearchValidationPipe } from 'src/common/pipes/search-validation.pipe';
+import { IdValidationPipe } from 'src/common/pipes/id-validation.pipe';
 
 @Controller('board')
 export class BoardController {
@@ -44,7 +45,7 @@ export class BoardController {
   @UseGuards(JwtGuard)
   update(
     @CurrentUser() user: Users,
-    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('boardId', ParseIntPipe, IdValidationPipe) boardId: number,
     @Body() updateBoardDto: UpdateBoardDto,
   ) {
     return this.boardService.update(user.id, boardId, updateBoardDto);
@@ -54,7 +55,7 @@ export class BoardController {
   @UseGuards(JwtGuard)
   createLike(
     @CurrentUser() user: Users,
-    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('boardId', ParseIntPipe, IdValidationPipe) boardId: number,
   ) {
     return this.boardService.createLike(user.id, boardId);
   }
@@ -63,7 +64,7 @@ export class BoardController {
   @UseGuards(JwtGuard)
   createDislike(
     @CurrentUser() user: Users,
-    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('boardId', ParseIntPipe, IdValidationPipe) boardId: number,
   ) {
     return this.boardService.createDislike(user.id, boardId);
   }
@@ -72,7 +73,7 @@ export class BoardController {
   @UseGuards(JwtGuard)
   deleteLike(
     @CurrentUser() user: Users,
-    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('boardId', ParseIntPipe, IdValidationPipe) boardId: number,
   ) {
     return this.boardService.deleteLike(user.id, boardId);
   }
@@ -81,7 +82,7 @@ export class BoardController {
   @UseGuards(JwtGuard)
   deleteDislike(
     @CurrentUser() user: Users,
-    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('boardId', ParseIntPipe, IdValidationPipe) boardId: number,
   ) {
     return this.boardService.deleteDislike(user.id, boardId);
   }
@@ -98,7 +99,7 @@ export class InfoBoardController {
   @UseGuards(JwtGuard)
   create(
     @CurrentUser() user: Users,
-    @Body(TagParsePipe) createBoardDto: CreateBoardDto,
+    @Body(TagParsePipe, IdValidationPipe) createBoardDto: CreateBoardDto,
   ) {
     console.log(createBoardDto);
     return this.infoBoardService.create(user.id, createBoardDto);
@@ -115,7 +116,7 @@ export class InfoBoardController {
 
   @Get(':id')
   getInfoBoardByID(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe, IdValidationPipe) id: number,
     @RealIP() ip: string,
   ) {
     try {
@@ -138,7 +139,7 @@ export class FreeBoardController {
   @UseGuards(JwtGuard)
   create(
     @CurrentUser() user: Users,
-    @Body() createFreeBoardDto: CreateFreeBoardDto,
+    @Body(IdValidationPipe) createFreeBoardDto: CreateFreeBoardDto,
   ) {
     return this.freeboardService.create(user.id, createFreeBoardDto);
   }
@@ -154,7 +155,7 @@ export class FreeBoardController {
 
   @Get(':id')
   getFreeBoardByID(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe, IdValidationPipe) id: number,
     @RealIP() ip: string,
   ) {
     try {

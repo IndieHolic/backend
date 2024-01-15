@@ -310,7 +310,7 @@ export class InfoBoardService {
         ],
         deletedAt: null,
       },
-      skip: cursor * take,
+      skip: (cursor - 1) * take,
       take,
       select: BoardSelectOption,
     });
