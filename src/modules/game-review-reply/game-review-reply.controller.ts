@@ -23,7 +23,7 @@ import {
 } from 'src/modules/game-review-reply/dtos/game-review-reply.dto';
 import { GameReviewReplyService } from 'src/modules/game-review-reply/game-review-reply.service';
 
-@Controller('game-review-reply')
+@Controller('game')
 export class GameReviewReplyController {
   constructor(
     private readonly gameReviewReplyService: GameReviewReplyService,
