@@ -28,6 +28,7 @@ enum GameRate {
 
 model Users {
   id        Int      @id @default(autoincrement())
+  userId    String   @unique
   name      String
   email     String   @unique
   password  String
@@ -73,13 +74,13 @@ model Games {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
-  version             GameVersions[]
-  GameCollections     GameCollections[]
-  GameSales           GameSales[]
-  GameReviews         GameReviews[]
-  GamePurchases       GamePurchases[]
-  GameTagUserLinks    GameTagUserLinks[]
-  GamePlayHistories   GamePlayHistories[]
+  version           GameVersions[]
+  GameCollections   GameCollections[]
+  GameSales         GameSales[]
+  GameReviews       GameReviews[]
+  GamePurchases     GamePurchases[]
+  GameTagUserLinks  GameTagUserLinks[]
+  GamePlayHistories GamePlayHistories[]
 }
 
 model Studios {
@@ -278,39 +279,39 @@ model Files {
 }
 
 model GameTags {
-  id              Int       @id @default(autoincrement())
-  name            String    @unique
-  
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
   Games           Games[]
   GameTagUserLink GameTagUserLinks[]
 }
 
 model GameTagUserLinks {
-  id        Int       @id @default(autoincrement())
-  userId    Int
-  Users     Users     @relation(fields: [userId], references: [id])
-  gameId    Int
-  Games      Games     @relation(fields: [gameId], references: [id])
-  tagId     Int
-  GameTags  GameTags  @relation(fields: [tagId], references: [id])
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  Users    Users    @relation(fields: [userId], references: [id])
+  gameId   Int
+  Games    Games    @relation(fields: [gameId], references: [id])
+  tagId    Int
+  GameTags GameTags @relation(fields: [tagId], references: [id])
 }
 
 model AgoraPasses {
-  id        Int       @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   userId    Int
-  Users     Users     @relation(fields: [userId], references: [id])
-  startAt   DateTime  @default(now())
+  Users     Users    @relation(fields: [userId], references: [id])
+  startAt   DateTime @default(now())
   endAt     DateTime
   totalTime Int
 }
 
 model GamePlayHistories {
-  id          Int         @id @default(autoincrement())
-  startAt     DateTime
-  endAt       DateTime
-  totalTime   Int
-  userId      Int
-  Users       Users     @relation(fields: [userId], references: [id])
-  gameId      Int
-  Games       Games       @relation(fields: [gameId], references: [id])
+  id        Int      @id @default(autoincrement())
+  startAt   DateTime
+  endAt     DateTime
+  totalTime Int
+  userId    Int
+  Users     Users    @relation(fields: [userId], references: [id])
+  gameId    Int
+  Games     Games    @relation(fields: [gameId], references: [id])
 }

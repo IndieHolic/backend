@@ -11,6 +11,10 @@ export class RegisterRequestDto {
 
   @IsNotEmpty()
   @IsString()
+  userId: string;
+
+  @IsNotEmpty()
+  @IsString()
   password: string;
 
   @IsNotEmpty()

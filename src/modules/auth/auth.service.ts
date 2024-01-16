@@ -22,16 +22,19 @@ export class AuthService {
   ) {}
 
   async login(loginRequsetDto: LoginRequestDto) {
+    const { email, userId, password } = loginRequsetDto;
+
+    if ((email && userId) || (!email && !userId)) {
+      throw new BadRequestException('이메일과 아이디 중 하나만 입력해주세요.');
+    }
+
     const user: Users = await this.prismaService.users.findUnique({
       where: {
         email: loginRequsetDto.email,
       },
     });
 
-    if (
-      !user ||
-      !(await bcrypt.compare(loginRequsetDto.password, user.password))
-    ) {
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException(
         '이메일 혹은 비밀번호가 올바르지 않습니다.',
       );
@@ -44,7 +47,10 @@ export class AuthService {
   }
 
   async createUser(registerRequestDto: RegisterRequestDto) {
-    const { email, password, name, verifyId } = registerRequestDto;
+    const { email, userId, password, name, verifyId } = registerRequestDto;
+
+    this.checkUserId(userId);
+    this.checkPassword(password);
 
     if (await this.prismaService.users.findUnique({ where: { email } })) {
       throw new ConflictException('이미 존재하는 이메일입니다.');
@@ -68,6 +74,7 @@ export class AuthService {
     await this.prismaService.users.create({
       data: {
         email,
+        userId,
         password: this.createHash(password),
         name,
       },
@@ -125,6 +132,43 @@ export class AuthService {
     });
 
     return {};
+  }
+
+  private checkUserId(userId: string) {
+    if (userId.length < 4 || userId.length > 16) {
+      throw new BadRequestException(
+        '아이디는 4자 이상 20자 이하로 설정해주세요.',
+      );
+    }
+
+    if (!userId.match(/^[a-zA-Z0-9]+$/)) {
+      throw new BadRequestException(
+        '아이디는 영문, 숫자만 사용할 수 있습니다.',
+      );
+    }
+  }
+
+  private checkPassword(password: string) {
+    if (password.length < 8 || password.length > 16) {
+      throw new BadRequestException(
+        '비밀번호는 영문 대소문자/숫자/특수문자 중 2가지 이상 조합, 8~16글자로 설정해주세요.',
+      );
+    }
+
+    const english = /[a-zA-Z]/;
+    const numbers = /[0-9]/;
+    const specialChars = /[^A-Za-z0-9]/;
+
+    let count = 0;
+    if (english.test(password)) count++;
+    if (numbers.test(password)) count++;
+    if (specialChars.test(password)) count++;
+
+    if (count < 2) {
+      throw new BadRequestException(
+        '비밀번호는 영문 대소문자/숫자/특수문자 중 2가지 이상 조합, 8~16글자로 설정해주세요.',
+      );
+    }
   }
 
   createHash(password: string) {
